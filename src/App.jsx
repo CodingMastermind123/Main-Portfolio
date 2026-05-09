@@ -350,7 +350,7 @@ function useMediaQuery(query) {
 
 function CustomCursor() { return null; }
 
-function ScrollArrow() {
+function ScrollArrow({ shootRef }) {
   const [scrollY, setScrollY] = useState(0);
   const [clicked, setClicked] = useState(false);
 
@@ -361,22 +361,24 @@ function ScrollArrow() {
   }, []);
 
   const handleClick = () => {
+    if (clicked) return;
     setClicked(true);
+    shootRef?.current?.();
     setTimeout(() => {
       setClicked(false);
       document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
-    }, 350);
+    }, 800);
   };
 
   return (
     <button
       onClick={handleClick}
-      className="absolute bottom-8 left-1/2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 animate-bounce"
+      className="absolute bottom-8 left-1/2 text-gray-400 hover:text-purple-400 animate-bounce"
       style={{
         opacity: scrollY > 100 ? 0 : 1,
         transition: 'opacity 300ms ease, transform 200ms ease, color 200ms ease',
         transform: clicked ? 'translateX(-50%) scale(1.6)' : 'translateX(-50%) scale(1)',
-        color: clicked ? '#6366f1' : undefined,
+        color: clicked ? '#a855f7' : undefined,
       }}
       aria-label="Scroll to About section"
     >
@@ -387,8 +389,7 @@ function ScrollArrow() {
 
 // ════════════════ HERO COMPONENTS ════════════════
 
-// Step 4.1 — Three.js scene: wireframe icosahedron + particle network + mouse lerp
-function ThreeHero({ isMobile }) {
+function ThreeHero({ isMobile, nameHoveredRef, shootRef }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -396,122 +397,321 @@ function ThreeHero({ isMobile }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    let w = window.innerWidth;
+    let h = window.innerHeight;
 
-    const scene    = new THREE.Scene();
-    const camera   = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
-    camera.position.z = 6;
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 100);
+    camera.position.z = 5;
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Wireframe icosahedron
-    const icoGeo   = new THREE.IcosahedronGeometry(2.5, 1);
-    const wireGeo  = new THREE.WireframeGeometry(icoGeo);
-    const wireMat  = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.6 });
-    const wireframe = new THREE.LineSegments(wireGeo, wireMat);
-    wireframe.position.x = 2;
-    scene.add(wireframe);
 
-    // Particles distributed in a sphere shell
-    const particleCount = 70;
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
+    // ── Ambient circular particles outside the vortex ───────────────────────
+    // Soft-circle texture via 2D canvas (avoids a second custom shader)
+    const circleCanvas = document.createElement('canvas');
+    circleCanvas.width  = 32;
+    circleCanvas.height = 32;
+    const ctx2d  = circleCanvas.getContext('2d');
+    const radGrad = ctx2d.createRadialGradient(16, 16, 0, 16, 16, 15);
+    radGrad.addColorStop(0,   'rgba(255,255,255,1)');
+    radGrad.addColorStop(0.5, 'rgba(255,255,255,0.6)');
+    radGrad.addColorStop(1,   'rgba(255,255,255,0)');
+    ctx2d.fillStyle = radGrad;
+    ctx2d.fillRect(0, 0, 32, 32);
+    const circleTex = new THREE.CanvasTexture(circleCanvas);
+
+    const AMB = 160;
+    const ambPos = new Float32Array(AMB * 3);
+    for (let i = 0; i < AMB; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi   = Math.acos(2 * Math.random() - 1);
-      const r     = 3 + Math.random() * 2;
-      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
+      const r     = 3 + Math.random() * 4.5; // 3–7.5, well outside vortex
+      ambPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      ambPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      ambPos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    const ambGeo = new THREE.BufferGeometry();
+    ambGeo.setAttribute('position', new THREE.BufferAttribute(ambPos, 3));
+    const ambMat = new THREE.PointsMaterial({
+      color:           0xc084fc,
+      size:            0.04,
+      map:             circleTex,
+      transparent:     true,
+      opacity:         0.45,
+      sizeAttenuation: true,
+      depthWrite:      false,
+      alphaTest:       0.01,
+    });
+    const ambPoints = new THREE.Points(ambGeo, ambMat);
+    ambPoints.renderOrder = 0;
+    scene.add(ambPoints);
+
+    // ── Vortex particle state arrays ─────────────────────────────────────────
+    const N = 400;
+    const angles       = new Float32Array(N);
+    const baseRadii    = new Float32Array(N);
+    const heights      = new Float32Array(N);
+    const mouseExtra   = new Float32Array(N);
+    const explodeTargR = new Float32Array(N);
+    const shootVels    = new Float32Array(N);
+    const breathePhase = new Float32Array(N);
+    const baseAlpha    = new Float32Array(N);
+    const twinkleFreq  = new Float32Array(N);
+    const twinklePhase = new Float32Array(N);
+
+    for (let i = 0; i < N; i++) {
+      angles[i]       = Math.random() * Math.PI * 2;
+      baseRadii[i]    = 0.8 + Math.sqrt(Math.random()) * 1.7; // 0.8–2.5, center-weighted
+      heights[i]      = (Math.random() - 0.5) * 3;
+      explodeTargR[i] = 4 + Math.random() * 2;
+      breathePhase[i] = Math.random() * Math.PI * 2;
+      baseAlpha[i]    = 0.65 + Math.random() * 0.35;           // 0.65–1.0
+      twinkleFreq[i]  = 0.3 + Math.random() * 0.5;            // 0.3–0.8 Hz
+      twinklePhase[i] = Math.random() * Math.PI * 2;
     }
 
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const particleMat = new THREE.PointsMaterial({ color: 0x818cf8, size: 0.05 });
-    const particles   = new THREE.Points(particleGeo, particleMat);
-    scene.add(particles);
+    // ── GPU buffers ───────────────────────────────────────────────────────────
+    const positions = new Float32Array(N * 3);
+    const aColorArr = new Float32Array(N * 3);
+    const aSizeArr  = new Float32Array(N);
+    const aAlphaArr = new Float32Array(N);
 
-    // Network lines connecting particles closer than 1.5 units
-    const linePositions = [];
-    for (let i = 0; i < particleCount; i++) {
-      for (let j = i + 1; j < particleCount; j++) {
-        const dx = positions[i * 3]     - positions[j * 3];
-        const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
-        const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
-        if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 1.5) {
-          linePositions.push(
-            positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
-            positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
-          );
+    // Size tiers: 60% small, 30% medium, 10% large (change 1)
+    for (let i = 0; i < N; i++) {
+      const roll = Math.random();
+      if      (roll < 0.60) aSizeArr[i] = 0.02 + Math.random() * 0.01;  // 0.02–0.03
+      else if (roll < 0.90) aSizeArr[i] = 0.03 + Math.random() * 0.02;  // 0.03–0.05
+      else                  aSizeArr[i] = 0.05 + Math.random() * 0.02;  // 0.05–0.07
+    }
+
+    const vortexGeo = new THREE.BufferGeometry();
+    const posAttr   = new THREE.BufferAttribute(positions, 3);
+    const colAttr   = new THREE.BufferAttribute(aColorArr, 3);
+    const szAttr    = new THREE.BufferAttribute(aSizeArr,  1);
+    const alpAttr   = new THREE.BufferAttribute(aAlphaArr, 1);
+    vortexGeo.setAttribute('position', posAttr);
+    vortexGeo.setAttribute('aColor',   colAttr);
+    vortexGeo.setAttribute('aSize',    szAttr);
+    vortexGeo.setAttribute('aAlpha',   alpAttr);
+
+    // ShaderMaterial: per-vertex size, color, alpha + global fade uniform
+    const vortexMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uGlobalAlpha: { value: 1.0 },
+        uPixelRatio:  { value: Math.min(window.devicePixelRatio, 2) },
+      },
+      vertexShader: `
+        uniform float uPixelRatio;
+        attribute vec3  aColor;
+        attribute float aSize;
+        attribute float aAlpha;
+        varying   vec3  vColor;
+        varying   float vAlpha;
+        void main() {
+          vColor = aColor;
+          vAlpha = aAlpha;
+          vec4 mvPos   = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * (900.0 / -mvPos.z) * uPixelRatio;
+          gl_Position  = projectionMatrix * mvPos;
         }
-      }
-    }
-    const lineGeo  = new THREE.BufferGeometry();
-    lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
-    const lineMat  = new THREE.LineBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.2 });
-    const networkLines = new THREE.LineSegments(lineGeo, lineMat);
-    scene.add(networkLines);
+      `,
+      fragmentShader: `
+        uniform float uGlobalAlpha;
+        varying vec3  vColor;
+        varying float vAlpha;
+        void main() {
+          float d    = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float soft = 1.0 - smoothstep(0.3, 0.5, d);
+          gl_FragColor = vec4(vColor, vAlpha * uGlobalAlpha * soft);
+        }
+      `,
+      transparent: true,
+      depthWrite:  false,
+    });
 
-    // Mouse reactivity — lerp scene rotation toward cursor
-    const mouse  = { x: 0, y: 0 };
-    const target = { x: 0, y: 0 };
+    const vortex = new THREE.Points(vortexGeo, vortexMat);
+    vortex.renderOrder = 1;
+    scene.add(vortex);
+
+    // Depth-based colours (change 5)
+    const NEAR_COL = new THREE.Color(0xc084fc); // +Z, closest to camera
+    const MID_COL  = new THREE.Color(0xa855f7); // mid
+    const FAR_COL  = new THREE.Color(0x6d28d9); // −Z, furthest
+    const tmpCol   = new THREE.Color();
+
+    // ── Mouse tracking ────────────────────────────────────────────────────────
+    const mouseNorm = { x: 0, y: 0 };
+    const camTarget = { x: 0, y: 0 };
+    const MAX_TILT  = 3 * Math.PI / 180;
+
     const handleMouse = (e) => {
-      mouse.x =  (e.clientX / window.innerWidth  - 0.5) * 2;
-      mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+      mouseNorm.x =  (e.clientX / w - 0.5) * 2;
+      mouseNorm.y = -(e.clientY / h - 0.5) * 2;
     };
     window.addEventListener('mousemove', handleMouse);
 
-    // Animation loop
+    const mouseWorld = () => {
+      const halfH = Math.tan((60 * Math.PI / 180) / 2) * camera.position.z;
+      return { x: mouseNorm.x * halfH * (w / h), y: mouseNorm.y * halfH };
+    };
+
+    // ── Interaction state ─────────────────────────────────────────────────────
+    let explodeProgress = 0;
+    let shooting        = false;
+    let shootT          = 0;
+
+    const shoot = () => {
+      if (shooting) return;
+      shooting = true;
+      shootT   = 0;
+      for (let i = 0; i < N; i++) shootVels[i] = 0.02 + Math.random() * 0.03;
+    };
+    if (shootRef) shootRef.current = shoot;
+
+    // ── Animation loop ────────────────────────────────────────────────────────
     let rafId;
+    const clock = new THREE.Clock();
+
     const animate = () => {
       rafId = requestAnimationFrame(animate);
-      target.x += (mouse.x - target.x) * 0.05;
-      target.y += (mouse.y - target.y) * 0.05;
-      wireframe.rotation.y   += 0.003;
-      wireframe.rotation.x   += 0.001;
-      particles.rotation.y   += 0.001;
-      networkLines.rotation.y += 0.001;
-      scene.rotation.y = target.x * 0.3;
-      scene.rotation.x = target.y * 0.3;
+      const delta   = clock.getDelta();
+      const elapsed = clock.elapsedTime;
+
+      // Camera parallax
+      camTarget.x += (mouseNorm.x * MAX_TILT - camTarget.x) * 0.05;
+      camTarget.y += (mouseNorm.y * MAX_TILT - camTarget.y) * 0.05;
+      scene.rotation.y = camTarget.x;
+      scene.rotation.x = camTarget.y;
+
+      // Hover explosion
+      const isHovered  = nameHoveredRef?.current || false;
+      const explTgt    = isHovered ? 1 : 0;
+      const explRate   = isHovered ? Math.min(delta * 2.5, 1) : Math.min(delta * 1.25, 1);
+      explodeProgress += (explTgt - explodeProgress) * explRate;
+
+      // Global alpha: explosion fades to 0.22, shoot fades to 0
+      if (shooting) {
+        shootT += delta;
+        vortexMat.uniforms.uGlobalAlpha.value = Math.max(0, 1 - shootT / 0.6);
+      } else {
+        vortexMat.uniforms.uGlobalAlpha.value = 1 - explodeProgress * 0.78;
+      }
+
+      const mw = mouseWorld();
+
+      for (let i = 0; i < N; i++) {
+        // Differential rotation: inner particles orbit faster (change 2)
+        angles[i] += 0.006 / baseRadii[i];
+
+        // Radial breathe — vortex inhales/exhales slightly (change 2)
+        const breathe = Math.sin(elapsed * 0.5 + breathePhase[i]) * 0.08;
+
+        // Upward drift + wrap, or shoot downward
+        if (!shooting) {
+          heights[i] += delta * 0.12;
+          if (heights[i] > 1.5) heights[i] = -1.5;
+        } else {
+          shootVels[i] += 0.008;
+          heights[i]   -= shootVels[i];
+        }
+
+        // Explosion expansion
+        const explR = baseRadii[i] + (explodeTargR[i] - baseRadii[i]) * explodeProgress;
+
+        // Mouse proximity push
+        const px   = explR * Math.cos(angles[i]);
+        const py   = heights[i];
+        const dist = Math.sqrt((px - mw.x) ** 2 + (py - mw.y) ** 2);
+        if (dist < 1.5 && !shooting) {
+          mouseExtra[i] = Math.max(mouseExtra[i], (1.5 - dist) / 1.5 * 1.5);
+        } else {
+          mouseExtra[i] += (0 - mouseExtra[i]) / 60;
+        }
+
+        const r = explR + mouseExtra[i] + breathe;
+
+        positions[i * 3]     = r * Math.cos(angles[i]);
+        positions[i * 3 + 1] = heights[i];
+        positions[i * 3 + 2] = r * Math.sin(angles[i]);
+
+        // Depth-based colour: Z in [-2.5, 2.5] (change 5)
+        const zNorm = Math.max(0, Math.min(1, (positions[i * 3 + 2] + 2.5) / 5));
+        if (zNorm > 0.5) {
+          tmpCol.copy(MID_COL).lerp(NEAR_COL, (zNorm - 0.5) * 2);
+        } else {
+          tmpCol.copy(FAR_COL).lerp(MID_COL, zNorm * 2);
+        }
+        aColorArr[i * 3]     = tmpCol.r;
+        aColorArr[i * 3 + 1] = tmpCol.g;
+        aColorArr[i * 3 + 2] = tmpCol.b;
+
+        // Per-particle twinkle opacity (change 4)
+        aAlphaArr[i] = baseAlpha[i] * (0.85 + 0.15 * Math.sin(elapsed * twinkleFreq[i] + twinklePhase[i]));
+      }
+
+      posAttr.needsUpdate = true;
+      colAttr.needsUpdate = true;
+      alpAttr.needsUpdate = true;
+
+      // Shoot completion: reset
+      if (shooting && shootT >= 0.6) {
+        shooting = false;
+        vortexMat.uniforms.uGlobalAlpha.value = 1;
+        for (let i = 0; i < N; i++) {
+          angles[i]     = Math.random() * Math.PI * 2;
+          heights[i]    = (Math.random() - 0.5) * 3;
+          shootVels[i]  = 0;
+          mouseExtra[i] = 0;
+        }
+      }
+
+      ambPoints.rotation.y += 0.0002;
+
       renderer.render(scene, camera);
     };
     animate();
 
-    // Resize handler
     const handleResize = () => {
-      const nw = window.innerWidth;
-      const nh = window.innerHeight;
-      camera.aspect = nw / nh;
+      w = window.innerWidth;
+      h = window.innerHeight;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh);
+      renderer.setSize(w, h);
     };
     window.addEventListener('resize', handleResize);
 
-    // CRITICAL cleanup — prevent memory leaks
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', handleMouse);
       window.removeEventListener('resize', handleResize);
-      icoGeo.dispose();
-      wireGeo.dispose();
-      wireMat.dispose();
-      particleGeo.dispose();
-      particleMat.dispose();
-      lineGeo.dispose();
-      lineMat.dispose();
+      ambGeo.dispose();
+      ambMat.dispose();
+      circleTex.dispose();
+      vortexGeo.dispose();
+      vortexMat.dispose();
       renderer.dispose();
+      if (shootRef) shootRef.current = null;
     };
   }, [isMobile]);
 
-  if (isMobile) return null;
+  if (isMobile) {
+    return (
+      <div
+        className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.22) 0%, #030712 65%)' }}
+      />
+    );
+  }
 
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
-      style={{ pointerEvents: 'none' }}
+      style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}
     />
   );
 }
@@ -671,11 +871,12 @@ function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
   );
 }
 
-// Step 4.6 — Hero section: parallax bg, badge, name, typed text, CTAs
 function HeroSection({ isMobile }) {
-  const parallaxRef = useRef(null);
+  const parallaxRef    = useRef(null);
+  const heroRef        = useRef(null);
+  const nameHoveredRef = useRef(false);
+  const shootRef       = useRef(null);
 
-  // Step 4.2 — Parallax: bg scrolls at half speed
   useEffect(() => {
     if (isMobile) return;
     const handle = () => {
@@ -690,27 +891,41 @@ function HeroSection({ isMobile }) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-gray-950"
+      ref={heroRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950"
     >
-      {/* Three.js parallax background */}
+      {/* Three.js full-viewport background */}
       <div
         ref={parallaxRef}
         className="absolute inset-0"
         style={{ willChange: 'transform' }}
       >
-        <ThreeHero isMobile={isMobile} />
+        <ThreeHero
+          isMobile={isMobile}
+          nameHoveredRef={nameHoveredRef}
+          shootRef={shootRef}
+        />
       </div>
 
-      {/* Fade-to-background gradient at bottom */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-gray-950 pointer-events-none" />
+      {/* Bottom fade */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950 pointer-events-none" />
 
-      {/* Hero content */}
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <CurrentlyBuildingBadge />
+      {/* Purple radial glow behind name (change 3) */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 5,
+          background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
+        }}
+      />
 
+      {/* Hero content — absolute center */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">
         <h1
-          className="mt-6 text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white"
+          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white cursor-default select-none"
           style={{ fontFamily: 'var(--font-display)' }}
+          onMouseEnter={() => { nameHoveredRef.current = true; }}
+          onMouseLeave={() => { nameHoveredRef.current = false; }}
         >
           Amrith<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
@@ -718,7 +933,7 @@ function HeroSection({ isMobile }) {
           </span>
         </h1>
 
-        <p className="mt-4 text-xl md:text-2xl text-gray-500 dark:text-gray-400 min-h-[2rem]">
+        <p className="mt-4 text-xl md:text-2xl text-gray-400 min-h-[2rem]">
           <TypedText strings={TAGLINES} />
         </p>
 
@@ -739,14 +954,14 @@ function HeroSection({ isMobile }) {
               e.preventDefault();
               document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 text-gray-700 dark:text-gray-300 font-semibold flex items-center gap-2 transition-colors"
+            className="px-6 py-3 rounded-full border border-gray-700 hover:border-indigo-500 text-gray-300 font-semibold flex items-center gap-2 transition-colors"
           >
             Contact Me <FiMail />
           </a>
         </div>
       </div>
 
-      <ScrollArrow />
+      <ScrollArrow shootRef={shootRef} />
     </section>
   );
 }
