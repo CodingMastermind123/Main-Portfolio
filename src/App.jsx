@@ -352,6 +352,7 @@ function CustomCursor() { return null; }
 
 function ScrollArrow() {
   const [scrollY, setScrollY] = useState(0);
+  const [clicked, setClicked] = useState(false);
 
   useEffect(() => {
     const handle = () => setScrollY(window.scrollY);
@@ -359,11 +360,24 @@ function ScrollArrow() {
     return () => window.removeEventListener('scroll', handle);
   }, []);
 
+  const handleClick = () => {
+    setClicked(true);
+    setTimeout(() => {
+      setClicked(false);
+      document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
+    }, 350);
+  };
+
   return (
     <button
-      onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 animate-bounce"
-      style={{ opacity: scrollY > 100 ? 0 : 1, transition: 'opacity 300ms ease' }}
+      onClick={handleClick}
+      className="absolute bottom-8 left-1/2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 animate-bounce"
+      style={{
+        opacity: scrollY > 100 ? 0 : 1,
+        transition: 'opacity 300ms ease, transform 200ms ease, color 200ms ease',
+        transform: clicked ? 'translateX(-50%) scale(1.6)' : 'translateX(-50%) scale(1)',
+        color: clicked ? '#6366f1' : undefined,
+      }}
       aria-label="Scroll to About section"
     >
       <FiChevronDown size={28} />
@@ -542,20 +556,120 @@ function TypedText({ strings }) {
 
 // Step 4.4 — Pulsing "currently building" badge
 function CurrentlyBuildingBadge() {
-  return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-sm font-medium">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-      </span>
-      Currently learning C++ • Open to research &amp; internships
-    </div>
-  );
+  return null;
 }
 
 // ════════════════ SECTION COMPONENTS ════════════════
 
-function Navbar() { return null; }
+// Step 5.1 — Sticky navbar: transparent → frosted glass on scroll, active section highlighting
+function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+
+  useEffect(() => {
+    const handle = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handle, { passive: true });
+    return () => window.removeEventListener('scroll', handle);
+  }, []);
+
+  // Track which section is in view
+  useEffect(() => {
+    const els = ['hero', ...NAV_LINKS.map(l => l.href.replace('#', ''))].map(
+      id => document.getElementById(id)
+    ).filter(Boolean);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { threshold: 0.3, rootMargin: '-80px 0px -40% 0px' }
+    );
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800'
+          : ''
+      }`}
+    >
+      <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="text-xl font-bold text-gray-900 dark:text-white tracking-tight"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          AA
+        </button>
+
+        {/* Desktop nav links */}
+        <ul className="hidden md:flex items-center gap-8">
+          {NAV_LINKS.map(({ label, href }) => {
+            const id = href.replace('#', '');
+            const isActive = activeSection === id;
+            return (
+              <li key={href}>
+                <button
+                  onClick={() => document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })}
+                  className={`relative text-sm font-medium py-1 transition-colors ${
+                    isActive
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {label}
+                  <span
+                    className="absolute bottom-0 left-0 h-0.5 bg-indigo-500 transition-all duration-300"
+                    style={{ width: isActive ? '100%' : '0%' }}
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Toggle theme"
+          >
+            <span style={{ display: 'inline-block', transform: darkMode ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 300ms' }}>
+              {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            </span>
+          </button>
+
+          {/* Resume pill — desktop only */}
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors"
+          >
+            <FiDownload size={14} /> Resume
+          </a>
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="md:hidden p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open menu"
+          >
+            <FiMenu size={22} />
+          </button>
+        </div>
+      </nav>
+    </header>
+  );
+}
 
 // Step 4.6 — Hero section: parallax bg, badge, name, typed text, CTAs
 function HeroSection({ isMobile }) {
@@ -637,7 +751,114 @@ function HeroSection({ isMobile }) {
   );
 }
 
-function AboutSection() { return null; }
+// Phase 6 — About section: two-column layout, bio, social links, animated stat chips
+function AboutSection() {
+  const headingRef  = useScrollReveal(0);
+  const photoRef    = useScrollReveal(100);
+  const bioRef      = useScrollReveal(200);
+
+  return (
+    <section id="about" className="py-24 bg-white dark:bg-gray-950">
+      <div className="max-w-6xl mx-auto px-6">
+
+        {/* Section heading */}
+        <div ref={headingRef} className="text-center mb-16">
+          <h2
+            className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            About Me
+          </h2>
+          <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
+        </div>
+
+        {/* Step 6.1 — Two-column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+
+          {/* Left — profile photo placeholder with gradient border */}
+          <div ref={photoRef} className="flex justify-center">
+            <div className="relative group">
+              {/* Gradient ring */}
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative w-56 h-56 md:w-72 md:h-72 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 flex items-center justify-center overflow-hidden border-4 border-white dark:border-gray-900 transition-transform duration-300 group-hover:scale-105">
+                {/* Initials placeholder */}
+                <span
+                  className="text-6xl md:text-7xl font-black text-indigo-500 select-none"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  AA
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — bio + social links */}
+          <div ref={bioRef} className="space-y-6">
+            {/* Step 6.2 — Bio heading */}
+            <h3
+              className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Hi, I'm Amrith!
+            </h3>
+
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+              I'm a Freshman Computer Engineering student at Texas A&M University, passionate about bridging the gap between software and hardware. I love turning ideas into real, tangible systems — whether that's a trained ML model, an embedded controller, or a polished web app.
+            </p>
+
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+              My goal is to build well-rounded engineering skills that span the full stack — from RTL design and microcontrollers all the way up to cloud-connected applications. Outside academics, I enjoy gaming, playing basketball and tennis, watching TV shows, and working out, and I always find ways to give back to my community as an Eagle Scout.
+            </p>
+
+            {/* Social links */}
+            <div className="flex items-center gap-4 pt-2">
+              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+                >
+                  <Icon size={16} /> {label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Step 6.3 — Animated stat chips */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {STATS.map(({ label, value, suffix }, i) => (
+            <StatChip key={label} label={label} value={value} suffix={suffix} delay={i * 100} />
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+function StatChip({ label, value, suffix, delay }) {
+  const { ref, count } = useAnimatedCounter(value);
+  const revealRef = useScrollReveal(delay);
+
+  return (
+    <div
+      ref={(el) => { ref.current = el; revealRef.current = el; }}
+      className="flex flex-col items-center gap-1 p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm"
+    >
+      <span
+        className="text-3xl font-black text-indigo-600 dark:text-indigo-400"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {count}{suffix}
+      </span>
+      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</span>
+    </div>
+  );
+}
 function SkillsSection() { return null; }
 function SkillRadarChart() { return null; }
 function ProjectsSection() { return null; }
@@ -646,7 +867,70 @@ function ContactSection() { return null; }
 function Footer() { return null; }
 
 // ════════════════ OVERLAY COMPONENTS ════════════════
-function MobileNav() { return null; }
+
+// Step 5.2 — Full-screen mobile nav with staggered entrance and body scroll lock
+function MobileNav({ open, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  const handleLink = (href) => {
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    onClose();
+  };
+
+  return (
+    <div
+      className={`fixed inset-0 z-[60] transition-opacity duration-300 ${
+        open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-gray-950/90 backdrop-blur-xl"
+        onClick={onClose}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full">
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 p-2 text-gray-400 hover:text-white transition-colors"
+          aria-label="Close menu"
+        >
+          <FiX size={28} />
+        </button>
+
+        {/* Staggered nav links */}
+        <nav>
+          <ul className="flex flex-col items-center gap-8">
+            {NAV_LINKS.map(({ label, href }, i) => (
+              <li
+                key={href}
+                style={{
+                  opacity: open ? 1 : 0,
+                  transform: open ? 'translateY(0)' : 'translateY(20px)',
+                  transition: `opacity 300ms ease, transform 300ms ease`,
+                  transitionDelay: open ? `${i * 75}ms` : '0ms',
+                }}
+              >
+                <button
+                  onClick={() => handleLink(href)}
+                  className="text-3xl font-bold text-white hover:text-indigo-400 transition-colors"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  );
+}
 function ProjectModal() { return null; }
 function CommandPalette() { return null; }
 function EasterEggConfetti() { return null; }
