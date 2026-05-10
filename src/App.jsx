@@ -25,7 +25,7 @@ const NAV_LINKS = [
 ];
 
 const TAGLINES = [
-  'Computer Engineering @ Texas A&M',
+  'Computer Engineering Honors @ Texas A&M',
   'Building with ML & Hardware',
   'Eagle Scout & Problem Solver',
   'Open to Research & Internships',
