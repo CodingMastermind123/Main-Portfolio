@@ -1182,6 +1182,45 @@ function SkillCategory({ category, skills, baseDelay }) {
 }
 
 // Step 7.1 — Skills section: categories grid + radar chart
+function LearningCard({ item, started }) {
+  const [hovered, setHovered] = useState(false);
+  const { name, desc, stage, width } = item;
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        boxShadow: hovered ? '0 0 18px rgba(168,85,247,0.35), 0 0 6px rgba(168,85,247,0.2)' : 'none',
+        borderColor: hovered ? '#a855f7' : undefined,
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
+      }}
+      className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+    >
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{name}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{stage}</span>
+      </div>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{desc}</p>
+      <div
+        className="h-1 w-full rounded-full overflow-hidden"
+        style={{ background: '#1e1e2e' }}
+      >
+        <div
+          style={{
+            width: started ? `${width}%` : '0%',
+            height: '100%',
+            borderRadius: '999px',
+            background: 'linear-gradient(to right, #7c3aed, #a855f7)',
+            transition: 'width 800ms ease-out',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function CurrentlyLearning() {
   const containerRef = useRef(null);
   const [started, setStarted] = useState(false);
@@ -1218,31 +1257,8 @@ function CurrentlyLearning() {
 
       {/* Progress bar items */}
       <div className="flex flex-col gap-3">
-        {CURRENTLY_LEARNING.map(({ name, desc, stage, width }) => (
-          <div
-            key={name}
-            className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
-          >
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">{name}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">{stage}</span>
-            </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{desc}</p>
-            <div
-              className="h-1 w-full rounded-full overflow-hidden"
-              style={{ background: '#1e1e2e' }}
-            >
-              <div
-                style={{
-                  width: started ? `${width}%` : '0%',
-                  height: '100%',
-                  borderRadius: '999px',
-                  background: 'linear-gradient(to right, #7c3aed, #a855f7)',
-                  transition: 'width 800ms ease-out',
-                }}
-              />
-            </div>
-          </div>
+        {CURRENTLY_LEARNING.map((item) => (
+          <LearningCard key={item.name} item={item} started={started} />
         ))}
       </div>
     </div>
@@ -1254,8 +1270,9 @@ function SkillsSection() {
   const radarRef   = useScrollReveal(150);
 
   return (
-    <section id="skills" className="py-24 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="skills" className="relative overflow-hidden py-24 bg-white dark:bg-gray-950">
+      <FloatingParticles count={80} />
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
 
         {/* Section heading */}
         <div ref={headingRef} className="text-center mb-16">
