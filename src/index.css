@@ -65,7 +65,22 @@ body::after {
   .reveal-hidden { opacity: 1; transform: none; transition: none; }
 }
 
-/* ════════════════ 2.6 CUSTOM CURSOR ════════════════ */
+/* ════════════════ 2.6 PULSE DOT (Currently Learning) ════════════════ */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(0.8); opacity: 0.8; }
+  50%       { transform: scale(1.2); opacity: 1; }
+}
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ════════════════ 2.7 CUSTOM CURSOR ════════════════ */
 @media (pointer: fine) {
   .custom-cursor-active { cursor: none; }
   .custom-cursor-active a,

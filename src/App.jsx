@@ -9,7 +9,7 @@ import {
   FiArrowUp, FiActivity, FiUsers, FiBox, FiCoffee,
 } from 'react-icons/fi';
 import {
-  SiPython, SiCplusplus, SiJavascript, SiReact, SiTensorflow,
+  SiPython, SiJavascript, SiTensorflow,
   SiGit, SiLinux, SiHtml5, SiCss,
 } from 'react-icons/si';
 
@@ -43,17 +43,22 @@ const STATS = [
   { label: 'Service Hours', value: 100, suffix: '+' },
 ];
 
+const CURRENTLY_LEARNING = [
+  { name: 'C++',     desc: 'Learning this summer',            stage: 'Fundamentals', width: 30 },
+  { name: 'Arduino', desc: 'Hands-on with embedded projects', stage: 'Fundamentals', width: 30 },
+  { name: 'React',   desc: 'Used in projects',                stage: 'Building',     width: 50 },
+  { name: 'Verilog', desc: 'Getting started with HDL',        stage: 'Fundamentals', width: 16 },
+];
+
 const SKILLS = {
   Languages: [
     { name: 'Python',     icon: SiPython,     color: '#3776AB' },
-    { name: 'C++',        icon: SiCplusplus,  color: '#00599C' },
     { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
     { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
     { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
     { name: 'Java',       icon: FiCoffee,     color: '#007396' },
   ],
   Frameworks: [
-    { name: 'React',      icon: SiReact,      color: '#61DAFB' },
     { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
   ],
   Tools: [
@@ -1119,6 +1124,73 @@ function SkillCategory({ category, skills, baseDelay }) {
 }
 
 // Step 7.1 — Skills section: categories grid + radar chart
+function CurrentlyLearning() {
+  const containerRef = useRef(null);
+  const [started, setStarted] = useState(false);
+  const labelRef = useScrollReveal(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStarted(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="mt-12">
+      {/* Divider */}
+      <div className="border-t border-gray-200 dark:border-gray-700 mb-8" />
+
+      {/* Label with pulsing dot */}
+      <div ref={labelRef} className="flex items-center gap-2 mb-4">
+        <span className="pulse-dot" aria-hidden="true" />
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+          Currently Learning
+        </h3>
+      </div>
+
+      {/* Progress bar items */}
+      <div className="flex flex-col gap-3">
+        {CURRENTLY_LEARNING.map(({ name, desc, stage, width }) => (
+          <div
+            key={name}
+            className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+          >
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">{name}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{stage}</span>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{desc}</p>
+            <div
+              className="h-1 w-full rounded-full overflow-hidden"
+              style={{ background: '#1e1e2e' }}
+            >
+              <div
+                style={{
+                  width: started ? `${width}%` : '0%',
+                  height: '100%',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(to right, #7c3aed, #a855f7)',
+                  transition: 'width 800ms ease-out',
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SkillsSection() {
   const headingRef = useScrollReveal(0);
   const radarRef   = useScrollReveal(150);
@@ -1164,6 +1236,10 @@ function SkillsSection() {
             <SkillRadarChart />
           </div>
         </div>
+
+        {/* Currently Learning subsection */}
+        <CurrentlyLearning />
+
       </div>
     </section>
   );
