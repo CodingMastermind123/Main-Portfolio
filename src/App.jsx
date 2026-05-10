@@ -6,12 +6,11 @@ import {
   FiSun, FiMoon, FiMenu, FiX, FiSearch, FiChevronDown,
   FiArrowRight, FiAward, FiCode, FiCpu, FiDatabase,
   FiGlobe, FiTerminal, FiTool, FiLayers, FiZap, FiUser,
-  FiArrowUp, FiActivity, FiUsers,
+  FiArrowUp, FiActivity, FiUsers, FiBox, FiCoffee,
 } from 'react-icons/fi';
 import {
   SiPython, SiCplusplus, SiJavascript, SiReact, SiTensorflow,
-  SiArduino, SiGit, SiDocker, SiLinux, SiNodedotjs,
-  SiTailwindcss,
+  SiGit, SiLinux, SiHtml5, SiCss,
 } from 'react-icons/si';
 
 // ════════════════ 3.2 DATA CONSTANTS ════════════════
@@ -48,32 +47,28 @@ const SKILLS = {
   Languages: [
     { name: 'Python',     icon: SiPython,     color: '#3776AB' },
     { name: 'C++',        icon: SiCplusplus,  color: '#00599C' },
+    { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
+    { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
     { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
-    { name: 'MATLAB',     icon: FiTerminal,   color: '#E16737' },
-    { name: 'Verilog',    icon: FiCpu,        color: '#848484' },
+    { name: 'Java',       icon: FiCoffee,     color: '#007396' },
   ],
   Frameworks: [
-    { name: 'React',       icon: SiReact,       color: '#61DAFB' },
-    { name: 'TensorFlow',  icon: SiTensorflow,  color: '#FF6F00' },
-    { name: 'Node.js',     icon: SiNodedotjs,   color: '#339933' },
-    { name: 'Tailwind',    icon: SiTailwindcss, color: '#06B6D4' },
-    { name: 'ROS',         icon: FiLayers,      color: '#22314E' },
+    { name: 'React',      icon: SiReact,      color: '#61DAFB' },
+    { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
   ],
   Tools: [
-    { name: 'Git',        icon: SiGit,     color: '#F05032' },
-    { name: 'Docker',     icon: SiDocker,  color: '#2496ED' },
-    { name: 'Arduino',    icon: SiArduino, color: '#00979D' },
-    { name: 'Linux',      icon: SiLinux,   color: '#FCC624' },
-    { name: 'SolidWorks', icon: FiTool,    color: '#FF0000' },
+    { name: 'Git',        icon: SiGit,  color: '#F05032' },
+    { name: 'Linux',      icon: SiLinux, color: '#FCC624' },
+    { name: 'SolidWorks', icon: FiBox,  color: '#FF0000' },
   ],
 };
 
 const RADAR_DATA = [
-  { axis: 'ML',       value: 0.7  },
-  { axis: 'Web',      value: 0.75 },
-  { axis: 'Hardware', value: 0.65 },
-  { axis: 'Systems',  value: 0.6  },
-  { axis: 'Design',   value: 0.5  },
+  { axis: 'ML',       value: 0.75 },
+  { axis: 'Web',      value: 0.65 },
+  { axis: 'Hardware', value: 0.70 },
+  { axis: 'Embedded', value: 0.72 },
+  { axis: 'Systems',  value: 0.60 },
 ];
 
 const PROJECTS = [
@@ -1074,8 +1069,233 @@ function StatChip({ label, value, suffix, delay }) {
     </div>
   );
 }
-function SkillsSection() { return null; }
-function SkillRadarChart() { return null; }
+// ════════════════ PHASE 7: SKILLS SECTION + RADAR CHART ════════════════
+
+// Step 7.1 — Individual skill card with brand-color hover glow
+function SkillCard({ skill, delay }) {
+  const ref = useScrollReveal(delay);
+  const [hovered, setHovered] = useState(false);
+  const Icon = skill.icon;
+
+  return (
+    <div
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        boxShadow: hovered ? `0 0 18px ${skill.color}55, 0 0 6px ${skill.color}33` : 'none',
+        borderColor: hovered ? skill.color : undefined,
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
+      }}
+      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 cursor-default"
+    >
+      <Icon size={26} style={{ color: skill.color }} />
+      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">
+        {skill.name}
+      </span>
+    </div>
+  );
+}
+
+// Skill category block with label + grid of cards
+function SkillCategory({ category, skills, baseDelay }) {
+  const labelRef = useScrollReveal(baseDelay);
+
+  return (
+    <div>
+      <div ref={labelRef} className="mb-3">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+          {category}
+        </h3>
+      </div>
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+        {skills.map((skill, i) => (
+          <SkillCard key={skill.name} skill={skill} delay={baseDelay + i * 50} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Step 7.1 — Skills section: categories grid + radar chart
+function SkillsSection() {
+  const headingRef = useScrollReveal(0);
+  const radarRef   = useScrollReveal(150);
+
+  return (
+    <section id="skills" className="py-24 bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-6xl mx-auto px-6">
+
+        {/* Section heading */}
+        <div ref={headingRef} className="text-center mb-16">
+          <h2
+            className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Skills
+          </h2>
+          <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
+        </div>
+
+        {/* Two-column: skill cards left, radar chart right */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+
+          {/* Skill categories — span 2 columns */}
+          <div className="lg:col-span-2 space-y-8">
+            {Object.entries(SKILLS).map(([category, skills], ci) => (
+              <SkillCategory
+                key={category}
+                category={category}
+                skills={skills}
+                baseDelay={ci * 100}
+              />
+            ))}
+          </div>
+
+          {/* Radar chart */}
+          <div ref={radarRef} className="flex flex-col items-center gap-4">
+            <h3
+              className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Proficiency Overview
+            </h3>
+            <SkillRadarChart />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Step 7.2 — SVG radar chart, animates from center on scroll
+function SkillRadarChart() {
+  const svgRef      = useRef(null);
+  const [prog, setProg] = useState(0);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          const start    = performance.now();
+          const duration = 1000;
+
+          const tick = (now) => {
+            const elapsed = now - start;
+            const p       = Math.min(elapsed / duration, 1);
+            const eased   = 1 - Math.pow(1 - p, 3);
+            setProg(eased);
+            if (p < 1) requestAnimationFrame(tick);
+          };
+
+          requestAnimationFrame(tick);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const cx = 150, cy = 150, maxR = 100;
+  const N  = RADAR_DATA.length; // 5
+
+  const angleOf  = (i) => (i * (2 * Math.PI) / N) - Math.PI / 2;
+  const pointAt  = (r, i) => ({
+    x: cx + r * Math.cos(angleOf(i)),
+    y: cy + r * Math.sin(angleOf(i)),
+  });
+  const toPath   = (pts) =>
+    pts.map((p, j) => `${j === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') + ' Z';
+
+  // 3 concentric grid pentagons
+  const gridRings = [0.33, 0.66, 1].map(scale =>
+    toPath(Array.from({ length: N }, (_, i) => pointAt(maxR * scale, i)))
+  );
+
+  // Axis endpoints (full radius)
+  const axes = Array.from({ length: N }, (_, i) => pointAt(maxR, i));
+
+  // Data polygon — animated by `prog`
+  const dataPath = toPath(RADAR_DATA.map((d, i) => pointAt(maxR * d.value * prog, i)));
+
+  // Dot positions for animated data points
+  const dots = RADAR_DATA.map((d, i) => pointAt(maxR * d.value * prog, i));
+
+  // Label positions slightly outside maxR
+  const labels = RADAR_DATA.map((d, i) => ({ ...pointAt(maxR + 22, i), axis: d.axis }));
+
+  return (
+    <svg
+      ref={svgRef}
+      viewBox="0 0 300 300"
+      className="w-full max-w-[280px] mx-auto"
+      aria-label="Skill proficiency radar chart"
+    >
+      {/* Grid rings */}
+      {gridRings.map((d, i) => (
+        <path
+          key={i}
+          d={d}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.15"
+          strokeWidth="1"
+        />
+      ))}
+
+      {/* Axis lines */}
+      {axes.map((pt, i) => (
+        <line
+          key={i}
+          x1={cx} y1={cy}
+          x2={pt.x} y2={pt.y}
+          stroke="currentColor"
+          strokeOpacity="0.15"
+          strokeWidth="1"
+        />
+      ))}
+
+      {/* Data polygon */}
+      <path
+        d={dataPath}
+        fill="rgba(99,102,241,0.22)"
+        stroke="rgb(99,102,241)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Data dots */}
+      {dots.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="4" fill="rgb(99,102,241)" />
+      ))}
+
+      {/* Axis labels */}
+      {labels.map(({ x, y, axis }, i) => (
+        <text
+          key={i}
+          x={x}
+          y={y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="11"
+          fontWeight="500"
+          className="fill-gray-600 dark:fill-gray-400"
+        >
+          {axis}
+        </text>
+      ))}
+    </svg>
+  );
+}
 function ProjectsSection() { return null; }
 function AchievementsSection() { return null; }
 function ContactSection() { return null; }
