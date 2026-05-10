@@ -79,79 +79,52 @@ const RADAR_DATA = [
 const PROJECTS = [
   {
     id: 1,
-    title: 'FoodLink',
-    summary: 'iOS/web platform connecting food donors with local shelters.',
-    description: 'FoodLink is a cross-platform food donation app that bridges the gap between food donors — restaurants, grocers, and individuals — and local food banks and shelters. Built with React and Node.js, it features real-time inventory tracking, route optimization for pickups, and a dashboard for shelter admins to manage incoming donations.',
-    stack: ['React', 'Node.js', 'MongoDB', 'Express', 'Tailwind'],
-    category: 'Web',
-    featured: true,
-    github: 'https://github.com/CodingMastermind123',
+    title: 'LegalDefender',
+    summary: 'AI-powered tenant protection app that scans leases for illegal clauses and tracks landlord reputation on the blockchain.',
+    description: 'Built at a hackathon to protect low-income renters from predatory landlords. Uses Gemini 1.5 Pro to audit lease PDFs against Texas Property Code, flagging illegal clauses in real time. Verified tenant reviews are permanently minted to the Solana blockchain so landlords can never delete negative feedback. Includes an OCR-based gatekeeper system to prevent fake reviews and an evidence locker for timestamped move-in photos.',
+    stack: ['React', 'Gemini API', 'Solana', 'Next.js', 'DigitalOcean'],
+    category: 'Other',
+    github: '#',
     demo: '#',
   },
   {
     id: 2,
-    title: 'Autonomous Line Follower',
-    summary: 'PID-controlled Arduino robot that navigates track lines at speed.',
-    description: 'An autonomous robot built on an Arduino Mega using IR sensor arrays and a custom PID control loop. Tuned Kp, Ki, and Kd constants through iterative testing to achieve smooth, high-speed tracking with minimal oscillation. Includes motor driver integration and serial logging for real-time PID telemetry.',
-    stack: ['Arduino', 'C++', 'PID Control', 'IR Sensors'],
-    category: 'Hardware',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
+    title: 'Cosmos',
+    summary: 'Interactive AI-guided knowledge graph of NASA exoplanet and mission data built at a hackathon.',
+    description: 'Built at a hackathon using NASA\'s Exoplanet Archive and the Anthropic Claude API. Renders a force-directed knowledge graph using D3.js where users can explore connections between exoplanets, missions, and discoveries. Features an AI guide called Stella that answers questions about the data in natural language.',
+    stack: ['React', 'D3.js', 'Claude API', 'NASA API', 'Vite'],
+    category: 'Web',
+    github: '#',
     demo: '#',
   },
   {
     id: 3,
-    title: 'Sentiment Analyzer',
-    summary: 'NLP model classifying social media posts by emotional tone.',
-    description: 'A natural language processing pipeline that classifies tweets and Reddit posts into positive, negative, and neutral sentiment. Uses a fine-tuned BERT model with a custom training loop in TensorFlow. Includes a Flask API endpoint and a simple React dashboard to visualize sentiment trends over time.',
-    stack: ['Python', 'TensorFlow', 'BERT', 'Flask', 'React'],
+    title: 'Biomedical ML',
+    summary: 'Deep learning model classifying chest X-rays for pneumonia detection with high accuracy.',
+    description: 'Trained a ResNet-50 convolutional neural network on a labeled chest X-ray dataset to classify images as normal or pneumonia. Handled class imbalance through weighted sampling and built a data pipeline with pandas for preprocessing and validation. Contributed the data engineering component including label mapping, sanity checks, and dataset splitting.',
+    stack: ['Python', 'TensorFlow', 'ResNet-50', 'Pandas'],
     category: 'ML',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
+    github: '#',
     demo: '#',
   },
   {
     id: 4,
-    title: 'Smart Irrigation System',
-    summary: 'ESP32-powered IoT system for automated soil moisture monitoring.',
-    description: 'An IoT irrigation controller built on the ESP32 that reads soil moisture, temperature, and humidity sensors and automatically triggers a water pump when thresholds are crossed. Data is published over MQTT to a Node-RED dashboard. Configurable schedules and manual overrides via a mobile-responsive web interface.',
-    stack: ['ESP32', 'C++', 'MQTT', 'Node-RED', 'JavaScript'],
-    category: 'Hardware',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
+    title: 'GoodBeats',
+    summary: 'Music recommendation app using Spotify audio features and machine learning to match songs to your taste.',
+    description: 'Built a content-based music recommendation system using Spotify audio features like tempo, energy, and valence. Trained a TensorFlow model to compute similarity between tracks and surface personalized recommendations. Flask REST API serves the ML backend with a clean HTML/CSS frontend.',
+    stack: ['Python', 'TensorFlow', 'Flask', 'Node.js', 'HTML', 'CSS'],
+    category: 'Web',
+    github: '#',
     demo: '#',
   },
   {
     id: 5,
-    title: 'Digit Recognizer',
-    summary: 'CNN achieving 99.1% accuracy on handwritten MNIST digits.',
-    description: 'A convolutional neural network trained on the MNIST dataset with data augmentation and dropout regularization. Achieves 99.1% test accuracy. Deployed as a web app where users can draw digits on a canvas and see real-time predictions with confidence scores. Built with TensorFlow/Keras and a React frontend.',
-    stack: ['Python', 'TensorFlow', 'Keras', 'React', 'Canvas API'],
-    category: 'ML',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
-    demo: '#',
-  },
-  {
-    id: 6,
-    title: 'Portfolio Website',
-    summary: 'This site — single-file React SPA with Three.js and Tailwind.',
-    description: 'A personal portfolio built as a single-file React application with Vite, Tailwind CSS v4, and Three.js for the 3D hero scene. Features a custom cursor, command palette (Cmd+K), scroll reveal animations, dark/light mode, a Konami code easter egg, and full mobile responsiveness — all without external component libraries.',
-    stack: ['React', 'Three.js', 'Tailwind CSS', 'Vite'],
-    category: 'Web',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
-    demo: '#',
-  },
-  {
-    id: 7,
-    title: 'Study Group Finder',
-    summary: 'Campus app matching students by course, schedule, and learning style.',
-    description: 'A web app that helps Texas A&M students find compatible study partners by matching on shared courses, weekly availability, and preferred study styles (visual, collaborative, solo drill). Includes a real-time chat feature, calendar integration, and a ranking algorithm that surfaces the best matches first.',
-    stack: ['React', 'Firebase', 'Tailwind', 'Node.js'],
-    category: 'Web',
-    featured: false,
-    github: 'https://github.com/CodingMastermind123',
+    title: 'Hardware Graphics Engine',
+    summary: 'Custom hardware graphics engine built in SystemVerilog and verified with Verilator.',
+    description: 'Designed and implemented a hardware graphics engine from scratch using SystemVerilog as part of a team project. Responsible for RTL design, module integration, and simulation-based verification using Verilator. Demonstrates low-level understanding of how graphics pipelines work at the hardware level.',
+    stack: ['SystemVerilog', 'C++', 'Verilator'],
+    category: 'Hardware',
+    github: '#',
     demo: '#',
   },
 ];
@@ -1447,7 +1420,311 @@ function SkillRadarChart() {
     </svg>
   );
 }
-function ProjectsSection() { return null; }
+// ════════════════ PHASE 8 — PROJECTS ════════════════
+
+function ProjectCard({ project, onExpand, index, pulsing }) {
+  const revealRef = useScrollReveal(index * 100);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      ref={revealRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={() => onExpand(project)}
+      className={`h-72 flex flex-col p-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-pointer ${pulsing ? 'card-pulse-anim' : ''}`}
+      style={{
+        position: 'relative',
+        boxShadow: hovered && !pulsing ? '0 0 18px rgba(99,102,241,0.35), 0 0 6px rgba(99,102,241,0.2)' : 'none',
+        borderColor: hovered && !pulsing ? '#6366f1' : undefined,
+        transform: hovered && !pulsing ? 'translateY(-3px)' : undefined,
+        transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
+      }}
+    >
+      {pulsing && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            borderRadius: '50%',
+            background: 'rgba(168, 85, 247, 0.6)',
+            animation: 'card-ripple 150ms ease-out forwards',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      <div className="flex items-start justify-between mb-3">
+        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+          {project.category}
+        </span>
+        <FiCode className="text-gray-400" size={18} />
+      </div>
+      <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+        {project.title}
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 flex-1 leading-relaxed">
+        {project.summary}
+      </p>
+      <div className="flex flex-wrap gap-1.5 mt-4">
+        {project.stack.slice(0, 4).map((tech) => (
+          <span
+            key={tech}
+            className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+          >
+            {tech}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExpandedProjectCard({ project, onClose }) {
+  const [phase, setPhase] = useState('entering');
+  const closeRef = useRef(null);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    // Double RAF: first paint at scale(0.85), second triggers the spring transition
+    const r1 = requestAnimationFrame(() => {
+      const r2 = requestAnimationFrame(() => setPhase('open'));
+      return () => cancelAnimationFrame(r2);
+    });
+    return () => {
+      cancelAnimationFrame(r1);
+      clearTimeout(timerRef.current);
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  // Always-fresh close handler via ref so the key listener doesn't need re-registration
+  const handleClose = () => {
+    if (phase === 'closing-charge' || phase === 'closing-retract') return;
+    setPhase('closing-charge');
+    timerRef.current = setTimeout(() => {
+      setPhase('closing-retract');
+      timerRef.current = setTimeout(onClose, 250);
+    }, 100);
+  };
+  closeRef.current = handleClose;
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') closeRef.current(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const isOpen     = phase === 'open';
+  const isCharging = phase === 'closing-charge';
+
+  // Scaler transform/opacity/transition per phase
+  const scalerStyle = (() => {
+    switch (phase) {
+      case 'entering':       return { transform: 'scale(0.85)', opacity: 0, transition: 'none' };
+      case 'open':           return { transform: 'scale(1)',    opacity: 1, transition: 'transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease' };
+      case 'closing-charge': return { transform: 'scale(1.05)', opacity: 1, transition: 'transform 100ms ease-in-out' };
+      case 'closing-retract':return { transform: 'scale(0.85)', opacity: 0, transition: 'transform 250ms cubic-bezier(0.36, 0, 0.66, -0.56), opacity 200ms ease' };
+      default:               return {};
+    }
+  })();
+
+  const backdropOpacity = (phase === 'entering' || phase === 'closing-retract') ? 0 : 1;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => closeRef.current()}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 40,
+          background: 'rgba(10, 0, 20, 0.75)',
+          backdropFilter: 'blur(6px)',
+          opacity: backdropOpacity,
+          transition: 'opacity 250ms ease',
+        }}
+      />
+
+      {/* Positioner — flex centering, no transform on this element */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          pointerEvents: 'none',
+        }}
+      >
+        {/* Scaler — handles scale/opacity stage transitions */}
+        <div
+          style={{
+            ...scalerStyle,
+            width: '90%',
+            maxWidth: '680px',
+            pointerEvents: 'auto',
+          }}
+        >
+          {/* Floater+Glow card — float and breathe animations live here */}
+          <div
+            className={`bg-white dark:bg-gray-900 rounded-2xl border p-8 ${isOpen ? 'card-float-anim card-glow-anim' : ''}`}
+            style={{
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              borderColor: 'rgba(168, 85, 247, 0.4)',
+              // During charge-up: freeze animations, jump to max glow
+              ...(isCharging ? {
+                animation: 'none',
+                boxShadow: '0 0 24px 5px rgba(168,85,247,0.38), 0 0 55px 10px rgba(168,85,247,0.13)',
+              } : {}),
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                {project.category}
+              </span>
+              <button
+                onClick={() => closeRef.current()}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
+
+            <h2
+              className="text-2xl font-bold mb-4"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {project.title}
+            </h2>
+
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+              {project.description}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mb-8">
+              {project.stack.map((tech) => (
+                <span
+                  key={tech}
+                  className="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
+            >
+              <FiGithub size={16} /> View Code
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ProjectsSection({ activeFilter, setActiveFilter }) {
+  const [expandedProject, setExpandedProject] = useState(null);
+  const [pulsingId, setPulsingId] = useState(null);
+  const expandTimerRef = useRef(null);
+  const headingRef = useScrollReveal(0);
+  const filterRef  = useScrollReveal(100);
+
+  const filteredProjects = activeFilter === 'All'
+    ? PROJECTS
+    : PROJECTS.filter((p) => p.category === activeFilter);
+
+  const handleExpand = (project) => {
+    // Cancel any in-flight expansion and immediately close any open card
+    clearTimeout(expandTimerRef.current);
+    setExpandedProject(null);
+    setPulsingId(null);
+
+    // Stage 1: pulse + ripple on the clicked card for 150ms
+    setPulsingId(project.id);
+    expandTimerRef.current = setTimeout(() => {
+      setPulsingId(null);
+      setExpandedProject(project);
+    }, 150);
+  };
+
+  useEffect(() => () => clearTimeout(expandTimerRef.current), []);
+
+  return (
+    <section id="projects" className="py-24 px-6 max-w-6xl mx-auto">
+      {/* Heading */}
+      <div ref={headingRef} className="text-center mb-12">
+        <h2
+          className="text-3xl md:text-4xl font-bold mb-4"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Projects
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+          A selection of things I've built — spanning ML, embedded hardware, and the web.
+        </p>
+      </div>
+
+      {/* Filter buttons */}
+      <div ref={filterRef} className="flex flex-wrap justify-center gap-2 mb-12">
+        {PROJECT_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setActiveFilter(cat);
+              clearTimeout(expandTimerRef.current);
+              setExpandedProject(null);
+              setPulsingId(null);
+            }}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+              activeFilter === cat
+                ? 'bg-indigo-600 border-indigo-600 text-white'
+                : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-500'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      {filteredProjects.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.map((project, i) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              index={i}
+              pulsing={pulsingId === project.id}
+              onExpand={handleExpand}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500 py-16">No projects in this category yet.</p>
+      )}
+
+      {expandedProject && (
+        <ExpandedProjectCard
+          project={expandedProject}
+          onClose={() => setExpandedProject(null)}
+        />
+      )}
+    </section>
+  );
+}
+
 function AchievementsSection() { return null; }
 function ContactSection() { return null; }
 function Footer() { return null; }
@@ -1517,7 +1794,114 @@ function MobileNav({ open, onClose }) {
     </div>
   );
 }
-function ProjectModal() { return null; }
+function ProjectModal({ project, onClose }) {
+  const modalRef = useRef(null);
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // Focus trap
+  useEffect(() => {
+    const el = modalRef.current;
+    if (!el) return;
+    const focusable = el.querySelectorAll('button, a, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const trap = (e) => {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    };
+    el.addEventListener('keydown', trap);
+    first?.focus();
+    return () => el.removeEventListener('keydown', trap);
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={project.title}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-gray-950/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Card */}
+      <div
+        ref={modalRef}
+        className="relative z-10 w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Close modal"
+        >
+          <FiX size={20} />
+        </button>
+
+        {/* Category badge */}
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 mb-4 inline-block">
+          {project.category}
+        </span>
+
+        <h2
+          className="text-2xl font-bold mb-4"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          {project.title}
+        </h2>
+
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+          {project.description}
+        </p>
+
+        {/* Stack */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {project.stack.map((tech) => (
+            <span
+              key={tech}
+              className="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+
+        {/* Links */}
+        <div className="flex gap-3">
+          <a
+            href={project.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
+          >
+            <FiGithub size={16} /> View Code
+          </a>
+          {project.demo !== '#' && (
+            <a
+              href={project.demo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+            >
+              <FiExternalLink size={16} /> Live Demo
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 function CommandPalette() { return null; }
 function EasterEggConfetti() { return null; }
 
@@ -1571,7 +1955,6 @@ export default function App() {
         <ProjectsSection
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
-          setSelectedProject={setSelectedProject}
         />
         <AchievementsSection />
         <ContactSection />

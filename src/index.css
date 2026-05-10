@@ -80,6 +80,32 @@ body::after {
   flex-shrink: 0;
 }
 
+/* ════════════════ PROJECT CARD ANIMATIONS ════════════════ */
+@keyframes card-pulse-open {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes card-ripple {
+  from { width: 0; height: 0; opacity: 0.6; transform: translate(-50%, -50%); }
+  to   { width: 120%; height: 120%; opacity: 0; transform: translate(-50%, -50%); }
+}
+
+@keyframes card-glow-breathe {
+  0%, 100% { box-shadow: 0 0 16px 3px rgba(168,85,247,0.2), 0 0 40px 6px rgba(168,85,247,0.08); }
+  50%       { box-shadow: 0 0 24px 5px rgba(168,85,247,0.38), 0 0 55px 10px rgba(168,85,247,0.13); }
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+.card-pulse-anim { animation: card-pulse-open 150ms ease-in-out; }
+.card-float-anim { animation: card-float 3s ease-in-out infinite; }
+.card-glow-anim  { animation: card-glow-breathe 2s ease-in-out infinite; }
+
 /* ════════════════ 2.7 CUSTOM CURSOR ════════════════ */
 @media (pointer: fine) {
   .custom-cursor-active { cursor: none; }
