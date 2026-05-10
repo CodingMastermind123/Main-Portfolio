@@ -350,6 +350,63 @@ function useMediaQuery(query) {
 
 function CustomCursor() { return null; }
 
+// Reusable floating particle canvas — no vortex, just drifting dots
+function FloatingParticles({ count = 45 }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const setSize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    setSize();
+
+    const particles = Array.from({ length: count }, () => ({
+      x:       Math.random() * canvas.width,
+      y:       Math.random() * canvas.height,
+      r:       Math.random() * 2 + 1,
+      vx:      (Math.random() - 0.5) * 0.25,
+      vy:      (Math.random() - 0.5) * 0.25,
+      opacity: Math.random() * 0.4 + 0.3,
+    }));
+
+    let rafId;
+    const animate = () => {
+      rafId = requestAnimationFrame(animate);
+      const { width: w, height: h } = canvas;
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        p.x = (p.x + p.vx + w) % w;
+        p.y = (p.y + p.vy + h) % h;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(99, 102, 241, ${p.opacity})`;
+        ctx.fill();
+      }
+    };
+    animate();
+
+    const handleResize = () => setSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [count]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ pointerEvents: 'none' }}
+    />
+  );
+}
+
 function ScrollArrow({ shootRef }) {
   const [scrollY, setScrollY] = useState(0);
   const [clicked, setClicked] = useState(false);
@@ -973,8 +1030,9 @@ function AboutSection() {
   const bioRef      = useScrollReveal(200);
 
   return (
-    <section id="about" className="py-24 bg-white dark:bg-gray-950">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="about" className="relative overflow-hidden py-24 bg-white dark:bg-gray-950">
+      <FloatingParticles count={80} />
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
 
         {/* Section heading */}
         <div ref={headingRef} className="text-center mb-16">
