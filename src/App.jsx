@@ -802,22 +802,21 @@ function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
     return () => window.removeEventListener('scroll', handle);
   }, []);
 
-  // Track which section is in view
+  // Track which section is in view — last section whose top edge is at or above navbar bottom (80px)
   useEffect(() => {
-    const els = ['hero', ...NAV_LINKS.map(l => l.href.replace('#', ''))].map(
-      id => document.getElementById(id)
-    ).filter(Boolean);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) setActiveSection(entry.target.id);
-        });
-      },
-      { threshold: 0.3, rootMargin: '-80px 0px -40% 0px' }
-    );
-    els.forEach(el => observer.observe(el));
-    return () => observer.disconnect();
+    const sectionIds = ['hero', ...NAV_LINKS.map(l => l.href.replace('#', ''))];
+    const handleScroll = () => {
+      let current = sectionIds[0];
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= 80) current = id;
+      }
+      setActiveSection(current);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
@@ -1664,14 +1663,15 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
   return (
     <section id="projects" className="py-24 px-6 max-w-6xl mx-auto">
       {/* Heading */}
-      <div ref={headingRef} className="text-center mb-12">
+      <div ref={headingRef} className="text-center mb-16">
         <h2
-          className="text-3xl md:text-4xl font-bold mb-4"
+          className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
           style={{ fontFamily: 'var(--font-display)' }}
         >
           Projects
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+        <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
+        <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
           A selection of things I've built — spanning ML, embedded hardware, and the web.
         </p>
       </div>
