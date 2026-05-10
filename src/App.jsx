@@ -1018,11 +1018,11 @@ function AboutSection() {
             </h3>
 
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              I'm a Freshman Computer Engineering student at Texas A&M University, passionate about bridging the gap between software and hardware. I love turning ideas into real, tangible systems — whether that's a trained ML model, an embedded controller, or a polished web app.
+              I'm a Computer Engineering freshman at Texas A&M, driven by one thing: building systems that actually work in the real world. Whether that's training an ML model, programming a microcontroller, or shipping a web app, I care about the full picture, not just one layer of the stack. More than anything, I want the things I build to actually matter and make an impact on people's lives.
             </p>
 
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              My goal is to build well-rounded engineering skills that span the full stack — from RTL design and microcontrollers all the way up to cloud-connected applications. Outside academics, I enjoy gaming, playing basketball and tennis, watching TV shows, and working out, and I always find ways to give back to my community as an Eagle Scout.
+              Outside the lab I play tennis and basketball, hit the gym, and unwind with video games and good TV. I'm also an Eagle Scout, and that experience of leading projects and solving problems under pressure has stuck with me ever since.
             </p>
 
             {/* Social links */}
