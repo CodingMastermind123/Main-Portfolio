@@ -127,6 +127,17 @@ const PROJECTS = [
     github: '#',
     demo: '#',
   },
+  {
+    id: 6,
+    title: 'This Site',
+    summary: 'Personal portfolio designed and built from scratch with a focus on animation and user experience.',
+    description: 'Designed and built as a single-page React app with no component libraries. Features a Three.js particle vortex hero that reacts to mouse movement, custom scroll reveal animations, project filtering, a command palette (Cmd+K), dark/light mode, and a Konami code easter egg. The goal was to make something that felt genuinely designed rather than templated.',
+    stack: ['React', 'Three.js', 'Tailwind CSS', 'Vite'],
+    category: 'Web',
+    github: '#',
+    demo: '#',
+    showDemo: true,
+  },
 ];
 
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
@@ -1618,14 +1629,26 @@ function ExpandedProjectCard({ project, onClose }) {
               ))}
             </div>
 
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
-            >
-              <FiGithub size={16} /> View Code
-            </a>
+            <div className="flex gap-3 flex-wrap">
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
+              >
+                <FiGithub size={16} /> View Code
+              </a>
+              {project.showDemo && (
+                <a
+                  href={project.demo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+                >
+                  <FiExternalLink size={16} /> Live Demo
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
