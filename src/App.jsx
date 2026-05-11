@@ -353,7 +353,150 @@ function useMediaQuery(query) {
 
 // ════════════════ UTILITY COMPONENTS ════════════════
 
-function CustomCursor() { return null; }
+// Precompute the 8 arc segment paths (30° arc, 45° slot, radius 16, center 20,20)
+const CURSOR_SEGMENTS = Array.from({ length: 8 }, (_, i) => {
+  const cx = 20, cy = 20, r = 16;
+  const startDeg = i * 45 - 90;
+  const endDeg   = startDeg + 30;
+  const s = startDeg * (Math.PI / 180);
+  const e = endDeg   * (Math.PI / 180);
+  return `M ${(cx + r * Math.cos(s)).toFixed(3)} ${(cy + r * Math.sin(s)).toFixed(3)} A ${r} ${r} 0 0 1 ${(cx + r * Math.cos(e)).toFixed(3)} ${(cy + r * Math.sin(e)).toFixed(3)}`;
+});
+
+function CustomCursor() {
+  const dotRef     = useRef(null);
+  const svgRef     = useRef(null);
+  const segRefs    = useRef([]);
+  const mousePos   = useRef({ x: -200, y: -200 });
+  const ringPos    = useRef({ x: -200, y: -200 });
+  const rafRef     = useRef(null);
+  const rotAngle   = useRef(0);
+  const hoverRef   = useRef(false);
+  const fillProg   = useRef(0);   // 0–1, drives segment fill + dot scale + color
+  const clickStart = useRef(null); // performance.now() of last mousedown
+
+  useEffect(() => {
+    const LERP = 0.12;
+
+    // Single mousemove handler keeps hover state up-to-date every frame
+    const onMove = (e) => {
+      mousePos.current = { x: e.clientX, y: e.clientY };
+      hoverRef.current = !!e.target.closest('a, button, [role="button"], input, textarea');
+    };
+    const onDown = () => { clickStart.current = performance.now(); };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mousedown', onDown);
+    document.body.classList.add('custom-cursor-active');
+
+    const loop = () => {
+      const { x: mx, y: my } = mousePos.current;
+
+      // lerp ring position
+      ringPos.current.x += (mx - ringPos.current.x) * LERP;
+      ringPos.current.y += (my - ringPos.current.y) * LERP;
+      const { x: lx, y: ly } = ringPos.current;
+
+      // fill progress: ramp up over ~18 frames on hover, down over ~12 on leave
+      fillProg.current = Math.max(0, Math.min(1,
+        fillProg.current + (hoverRef.current ? 1 / 18 : -1 / 12)
+      ));
+      const fp = fillProg.current;
+
+      // rotation: doubles on hover
+      rotAngle.current = (rotAngle.current + (hoverRef.current ? 2 : 1)) % 360;
+
+      // click scale: 1 → 0.6 over 80ms, 0.6 → 1 over 120ms
+      let cScale = 1;
+      if (clickStart.current !== null) {
+        const t = performance.now() - clickStart.current;
+        if (t < 80)        cScale = 1 - 0.4 * (t / 80);
+        else if (t < 200)  cScale = 0.6 + 0.4 * ((t - 80) / 120);
+        else               { cScale = 1; clickStart.current = null; }
+      }
+
+      // dot: follows mouse exactly, scales 6→10px, color shifts on hover
+      const dot = dotRef.current;
+      if (dot) {
+        const dotScale = 1 + fp * (10 / 6 - 1);
+        dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%,-50%) scale(${dotScale})`;
+        dot.style.background = fp > 0.5 ? '#c084fc' : '#a855f7';
+      }
+
+      // SVG ring: lags behind, rotates, contracts on click
+      const svg = svgRef.current;
+      if (svg) {
+        svg.style.transform =
+          `translate(${lx}px,${ly}px) translate(-50%,-50%) rotate(${rotAngle.current}deg) scale(${cScale})`;
+      }
+
+      // segments: fill clockwise one-by-one as fillProg increases
+      segRefs.current.forEach((seg, i) => {
+        if (!seg) return;
+        // segFill 0→1 per segment, staggered so segment i starts when fp > i/8
+        const segFill = Math.max(0, Math.min(1, fp * 8 - i));
+        seg.setAttribute('stroke', segFill > 0.5 ? '#c084fc' : '#a855f7');
+        seg.setAttribute('stroke-width', (1.5 + segFill * 1.0).toFixed(2));
+        seg.setAttribute('opacity', (0.65 + segFill * 0.35).toFixed(2));
+      });
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mousedown', onDown);
+      document.body.classList.remove('custom-cursor-active');
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <>
+      {/* Center dot — follows mouse exactly */}
+      <div
+        ref={dotRef}
+        aria-hidden
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          width: 6, height: 6,
+          borderRadius: '50%',
+          background: '#a855f7',
+          pointerEvents: 'none',
+          zIndex: 99999,
+          willChange: 'transform',
+        }}
+      />
+      {/* Segmented rotating ring — lags behind with lerp 0.12 */}
+      <svg
+        ref={svgRef}
+        aria-hidden
+        width="40" height="40" viewBox="0 0 40 40"
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          pointerEvents: 'none',
+          zIndex: 99998,
+          willChange: 'transform',
+          overflow: 'visible',
+        }}
+      >
+        {CURSOR_SEGMENTS.map((d, i) => (
+          <path
+            key={i}
+            ref={el => { segRefs.current[i] = el; }}
+            d={d}
+            fill="none"
+            stroke="#a855f7"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.65"
+          />
+        ))}
+      </svg>
+    </>
+  );
+}
 
 // Reusable floating particle canvas — no vortex, just drifting dots
 function FloatingParticles({ count = 45 }) {
