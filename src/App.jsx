@@ -1,12 +1,11 @@
 // ════════════════ 3.1 IMPORTS ════════════════
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import * as THREE from 'three';
 import {
   FiGithub, FiLinkedin, FiMail, FiExternalLink, FiDownload,
   FiSun, FiMoon, FiMenu, FiX, FiSearch, FiChevronDown,
-  FiArrowRight, FiAward, FiCode, FiCpu, FiDatabase,
-  FiGlobe, FiTerminal, FiTool, FiLayers, FiZap, FiUser,
-  FiArrowUp, FiActivity, FiUsers, FiBox, FiCoffee,
+  FiArrowRight, FiAward, FiCode, FiLayers, FiZap, FiUser,
+  FiActivity, FiBox, FiCoffee,
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
@@ -594,7 +593,7 @@ function ScrollArrow({ shootRef }) {
 
 // ════════════════ HERO COMPONENTS ════════════════
 
-function ThreeHero({ isMobile, nameHoveredRef, shootRef }) {
+const ThreeHero = memo(function ThreeHero({ isMobile, nameHoveredRef, shootRef }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -919,7 +918,7 @@ function ThreeHero({ isMobile, nameHoveredRef, shootRef }) {
       style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}
     />
   );
-}
+});
 
 // Step 4.3 — Typing animation: forward 50ms/char, pause 2s, delete 30ms/char
 function TypedText({ strings }) {
@@ -1126,7 +1125,7 @@ function HeroSection({ isMobile }) {
       {/* Hero content — absolute center */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">
         <h1
-          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white cursor-default select-none"
+          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white cursor-default select-none"
           style={{ fontFamily: 'var(--font-display)' }}
           onMouseEnter={() => { nameHoveredRef.current = true; }}
           onMouseLeave={() => { nameHoveredRef.current = false; }}
@@ -1319,7 +1318,7 @@ function SkillCategory({ category, skills, baseDelay }) {
           {category}
         </h3>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {skills.map((skill, i) => (
           <SkillCard key={skill.name} skill={skill} delay={baseDelay + i * 50} />
         ))}
@@ -1468,7 +1467,7 @@ function SkillsSection() {
 }
 
 // Step 7.2 — SVG radar chart, animates from center on scroll
-function SkillRadarChart() {
+const SkillRadarChart = memo(function SkillRadarChart() {
   const svgRef      = useRef(null);
   const [prog, setProg] = useState(0);
   const hasAnimated = useRef(false);
@@ -1593,7 +1592,7 @@ function SkillRadarChart() {
       ))}
     </svg>
   );
-}
+});
 // ════════════════ PHASE 8 — PROJECTS ════════════════
 
 function ProjectCard({ project, onExpand, index, pulsing }) {
@@ -2371,7 +2370,130 @@ function ProjectModal({ project, onClose }) {
     </div>
   );
 }
-function CommandPalette() { return null; }
+function CommandPalette({ onClose, toggleDarkMode }) {
+  const [query, setQuery]     = useState('');
+  const [selected, setSelected] = useState(0);
+  const inputRef   = useRef(null);
+  const prevFocus  = useRef(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? COMMAND_ACTIONS.filter(a => a.label.toLowerCase().includes(q)) : COMMAND_ACTIONS;
+  }, [query]);
+
+  // Clamp selected index when filtered list shrinks
+  const safeSelected = Math.min(selected, Math.max(0, filtered.length - 1));
+
+  const execute = useCallback((action) => {
+    if (action.action === 'scroll') {
+      document.querySelector(action.target)?.scrollIntoView({ behavior: 'smooth' });
+    } else if (action.action === 'theme') {
+      toggleDarkMode();
+    } else if (action.action === 'link') {
+      window.open(action.target, '_blank', 'noopener,noreferrer');
+    }
+    onClose();
+  }, [onClose, toggleDarkMode]);
+
+  // Auto-focus input, restore previous focus on close
+  useEffect(() => {
+    prevFocus.current = document.activeElement;
+    inputRef.current?.focus();
+    return () => { prevFocus.current?.focus(); };
+  }, []);
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const handleKey = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelected(i => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelected(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      if (filtered[safeSelected]) execute(filtered[safeSelected]);
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-start justify-center pt-[20vh]"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden />
+
+      {/* Palette card — entrance: scale + fade via CSS animation */}
+      <div
+        className="relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+        style={{ animation: 'palette-in 150ms ease forwards' }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+      >
+        {/* Search input */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <FiSearch className="text-gray-400 shrink-0" size={18} />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Type a command or search…"
+            value={query}
+            onChange={e => { setQuery(e.target.value); setSelected(0); }}
+            onKeyDown={handleKey}
+            className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm outline-none"
+          />
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono text-gray-400 border border-gray-200 dark:border-gray-700">
+            esc
+          </kbd>
+        </div>
+
+        {/* Results list */}
+        <ul className="py-2 max-h-72 overflow-y-auto" role="listbox">
+          {filtered.length === 0 && (
+            <li className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No results found.</li>
+          )}
+          {filtered.map((action, i) => {
+            const Icon = action.icon;
+            const isActive = i === safeSelected;
+            return (
+              <li
+                key={action.label}
+                role="option"
+                aria-selected={isActive}
+                onMouseEnter={() => setSelected(i)}
+                onMouseDown={() => execute(action)}
+                className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer transition-colors ${
+                  isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <Icon size={16} className="shrink-0" />
+                <span>{action.label}</span>
+                {isActive && <FiArrowRight size={14} className="ml-auto opacity-60" />}
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Footer hint */}
+        <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-800 flex items-center gap-4 text-xs text-gray-400">
+          <span><kbd className="font-mono">↑↓</kbd> navigate</span>
+          <span><kbd className="font-mono">↵</kbd> select</span>
+          <span><kbd className="font-mono">esc</kbd> close</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 function EasterEggConfetti() { return null; }
 
 // ════════════════ 3.5 ROOT APP COMPONENT ════════════════

@@ -64,6 +64,9 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .reveal-hidden { opacity: 1; transform: none; transition: none; }
 }
+@media (max-width: 768px) {
+  .reveal-hidden { transform: none; }
+}
 
 /* ════════════════ 2.6 PULSE DOT (Currently Learning) ════════════════ */
 @keyframes pulse-dot {
@@ -105,6 +108,12 @@ body::after {
 .card-pulse-anim { animation: card-pulse-open 150ms ease-in-out; }
 .card-float-anim { animation: card-float 3s ease-in-out infinite; }
 .card-glow-anim  { animation: card-glow-breathe 2s ease-in-out infinite; }
+
+/* ════════════════ COMMAND PALETTE ENTRANCE ════════════════ */
+@keyframes palette-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
 
 /* ════════════════ 2.7 CUSTOM CURSOR ════════════════ */
 @media (pointer: fine) {
