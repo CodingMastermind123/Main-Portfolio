@@ -1864,8 +1864,196 @@ function AchievementsSection() {
     </section>
   );
 }
-function ContactSection() { return null; }
-function Footer() { return null; }
+// ════════════════ PHASE 10: CONTACT + FOOTER ════════════════
+
+function ContactSection() {
+  const headingRef = useScrollReveal(0);
+  const leftRef    = useScrollReveal(100);
+  const rightRef   = useScrollReveal(200);
+
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [status, setStatus] = useState('idle'); // idle | success
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setStatus('success');
+    setForm({ name: '', email: '', message: '' });
+    setTimeout(() => setStatus('idle'), 3000);
+  };
+
+  return (
+    <section id="contact" className="relative overflow-hidden py-24 px-6 bg-white dark:bg-gray-950">
+      <FloatingParticles count={80} />
+      {/* background accent blob */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-5 blur-3xl"
+        style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)' }}
+      />
+
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Heading */}
+        <div ref={headingRef} className="reveal-hidden text-center mb-14">
+          <h2 className="text-3xl md:text-4xl font-bold font-display text-gray-900 dark:text-white">
+            Get In Touch
+          </h2>
+          <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            Have a project idea, research opportunity, or just want to say hi? I'd love to hear from you.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          {/* Left — info + social */}
+          <div ref={leftRef} className="reveal-hidden space-y-8">
+            <div>
+              <h3 className="text-2xl font-bold font-display text-gray-900 dark:text-white mb-3">
+                Let's build something together.
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                I'm currently open to research positions, internship opportunities, and interesting side-project collaborations. Whether you're a recruiter, a fellow student, or a curious engineer — drop me a message.
+              </p>
+            </div>
+
+            {/* Social links */}
+            <div className="space-y-4">
+              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="flex items-center gap-4 group"
+                >
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 group-hover:border-indigo-500 group-hover:text-indigo-500 transition-colors">
+                    <Icon size={18} />
+                  </span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-indigo-500 transition-colors">
+                    {label}
+                  </span>
+                </a>
+              ))}
+            </div>
+
+            {/* Resume CTA */}
+            <a
+              href="/resume.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-lg shadow-indigo-500/20"
+            >
+              <FiDownload size={18} />
+              Download Resume
+            </a>
+          </div>
+
+          {/* Right — contact form */}
+          <div ref={rightRef} className="reveal-hidden">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5 p-8 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
+            >
+              {status === 'success' && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-sm font-medium">
+                  <FiZap size={16} />
+                  Message sent! (Demo — no backend connected)
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  required
+                  rows={5}
+                  value={form.message}
+                  onChange={handleChange}
+                  placeholder="Tell me about your project or opportunity..."
+                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                Send Message
+                <FiArrowRight size={18} />
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 py-10 px-6">
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
+          © {year} Amrith Akshintala. Built with React &amp; Three.js.
+        </p>
+        <div className="flex items-center gap-5">
+          {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+            <a
+              key={label}
+              href={href}
+              aria-label={label}
+              target={href.startsWith('http') ? '_blank' : undefined}
+              rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              className="text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+            >
+              <Icon size={18} />
+            </a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 // ════════════════ OVERLAY COMPONENTS ════════════════
 
