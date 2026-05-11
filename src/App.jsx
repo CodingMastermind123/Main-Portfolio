@@ -435,7 +435,7 @@ function ScrollArrow({ shootRef }) {
   return (
     <button
       onClick={handleClick}
-      className="absolute bottom-8 left-1/2 text-gray-400 hover:text-purple-400 animate-bounce"
+      className="absolute bottom-8 left-1/2 text-gray-500 dark:text-gray-400 hover:text-purple-400 animate-bounce"
       style={{
         opacity: scrollY > 100 ? 0 : 1,
         transition: 'opacity 300ms ease, transform 200ms ease, color 200ms ease',
@@ -953,7 +953,7 @@ function HeroSection({ isMobile }) {
     <section
       id="hero"
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-950"
     >
       {/* Three.js full-viewport background */}
       <div
@@ -969,7 +969,7 @@ function HeroSection({ isMobile }) {
       </div>
 
       {/* Bottom fade */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-100 dark:to-gray-950 pointer-events-none" />
 
       {/* Purple radial glow behind name (change 3) */}
       <div
@@ -983,7 +983,7 @@ function HeroSection({ isMobile }) {
       {/* Hero content — absolute center */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto">
         <h1
-          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white cursor-default select-none"
+          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white cursor-default select-none"
           style={{ fontFamily: 'var(--font-display)' }}
           onMouseEnter={() => { nameHoveredRef.current = true; }}
           onMouseLeave={() => { nameHoveredRef.current = false; }}
@@ -994,7 +994,7 @@ function HeroSection({ isMobile }) {
           </span>
         </h1>
 
-        <p className="mt-4 text-xl md:text-2xl text-gray-400 min-h-[2rem]">
+        <p className="mt-4 text-xl md:text-2xl text-gray-600 dark:text-gray-400 min-h-[2rem]">
           <TypedText strings={TAGLINES} />
         </p>
 
@@ -1015,7 +1015,7 @@ function HeroSection({ isMobile }) {
               e.preventDefault();
               document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="px-6 py-3 rounded-full border border-gray-700 hover:border-indigo-500 text-gray-300 font-semibold flex items-center gap-2 transition-colors"
+            className="px-6 py-3 rounded-full border border-gray-400 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 font-semibold flex items-center gap-2 transition-colors"
           >
             Contact Me <FiMail />
           </a>
