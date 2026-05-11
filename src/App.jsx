@@ -12,6 +12,10 @@ import {
   SiPython, SiJavascript, SiTensorflow,
   SiGit, SiLinux, SiHtml5, SiCss,
 } from 'react-icons/si';
+import { GiFleurDeLys } from 'react-icons/gi';
+import { MdVolunteerActivism } from 'react-icons/md';
+import { PiMedalFill } from 'react-icons/pi';
+import { FaGraduationCap, FaPython, FaJava } from 'react-icons/fa';
 
 // ════════════════ 3.2 DATA CONSTANTS ════════════════
 
@@ -145,28 +149,45 @@ const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
 const ACHIEVEMENTS = [
   {
     title: 'Eagle Scout',
-    description: 'Earned Scouting America\'s highest rank, demonstrating leadership, community service, and a 12-year commitment to personal growth.',
+    description: "Earned Scouting America's highest rank after 6+ years of commitment, demonstrating leadership, community service, and perseverance through one of youth's most rigorous programs.",
     icon: 'eagle',
+    chip: 'Scouting America • 6+ Years',
+    color: '#a855f7',
   },
   {
     title: 'Presidential Volunteer Service Award',
-    description: 'Recognized by the President\'s Council on Service and Civic Participation for completing 100+ hours of community service.',
+    description: "Recognized by the President's Council on Service and Civic Participation for completing 100+ hours of community service. Gold level award.",
     icon: 'award',
+    chip: 'Gold Level • 100+ Hours',
+    color: '#22c55e',
   },
   {
-    title: 'Varsity Tennis',
-    description: 'Competed at the varsity level, developing discipline, strategic thinking, and resilience through high-pressure match play.',
-    icon: 'tennis',
+    title: 'National Merit Commended Scholar',
+    description: 'Recognized by the National Merit Scholarship Corporation for scoring in the top 3-4% of PSAT/NMSQT test takers nationwide.',
+    icon: 'merit',
+    chip: 'Top 3-4% Nationwide',
+    color: '#f59e0b',
   },
   {
-    title: 'TAMUhack Participant',
-    description: 'Competed in Texas A&M\'s flagship hackathon, building a functional prototype under a 24-hour deadline alongside a cross-disciplinary team.',
-    icon: 'code',
+    title: 'AP Scholar with Distinction',
+    description: 'Earned by scoring 3.5 or higher on all AP exams taken and 3 or higher on five or more AP exams. Awarded by the College Board.',
+    icon: 'ap',
+    chip: 'College Board Recognition',
+    color: '#38bdf8',
   },
   {
-    title: 'Engineering Team Projects',
-    description: 'Contributed to multiple collaborative engineering projects, applying coursework to real hardware and software systems with teammates.',
-    icon: 'team',
+    title: 'PCEP Certified Python Programmer',
+    description: 'Entry-level Python certification from the Python Institute validating core programming skills including data types, control flow, functions, and basic object-oriented programming.',
+    icon: 'python',
+    chip: 'Python Institute',
+    color: '#3b82f6',
+  },
+  {
+    title: 'Certified Java IT Specialist',
+    description: 'Industry certification validating proficiency in Java programming fundamentals including object-oriented design, data structures, and core Java APIs.',
+    icon: 'java',
+    chip: 'Java Certification',
+    color: '#f97316',
   },
 ];
 
@@ -1684,7 +1705,9 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
   useEffect(() => () => clearTimeout(expandTimerRef.current), []);
 
   return (
-    <section id="projects" className="py-24 px-6 max-w-6xl mx-auto">
+    <section id="projects" className="relative overflow-hidden py-24 px-6 bg-white dark:bg-gray-950">
+      <FloatingParticles count={80} />
+      <div className="relative z-10 max-w-6xl mx-auto">
       {/* Heading */}
       <div ref={headingRef} className="text-center mb-16">
         <h2
@@ -1744,11 +1767,103 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
           onClose={() => setExpandedProject(null)}
         />
       )}
+      </div>
     </section>
   );
 }
 
-function AchievementsSection() { return null; }
+// ════════════════ PHASE 9 — ACHIEVEMENTS SECTION ════════════════
+const ACHIEVEMENT_ICON_MAP = {
+  eagle:  GiFleurDeLys,
+  award:  MdVolunteerActivism,
+  merit:  PiMedalFill,
+  ap:     FaGraduationCap,
+  python: FaPython,
+  java:   FaJava,
+};
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r},${g},${b}`;
+}
+
+function AchievementCard({ achievement, index }) {
+  const revealRef = useScrollReveal(index * 150);
+  const [hovered, setHovered] = useState(false);
+  const Icon = ACHIEVEMENT_ICON_MAP[achievement.icon] || FiAward;
+  const rgb = hexToRgb(achievement.color);
+
+  return (
+    <div
+      ref={revealRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? `0 16px 40px rgba(${rgb},0.3)`
+          : '0 2px 12px rgba(0,0,0,0.15)',
+        borderColor: hovered ? `rgba(${rgb},0.4)` : 'transparent',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+      }}
+      className="flex flex-col items-center text-center p-8 rounded-2xl border bg-white dark:bg-gray-900 cursor-default"
+    >
+      <div
+        style={{
+          background: `rgba(${rgb},0.15)`,
+          border: `2px solid rgba(${rgb},0.35)`,
+        }}
+        className="flex items-center justify-center w-16 h-16 rounded-full mb-5"
+      >
+        <Icon style={{ color: achievement.color }} className="w-8 h-8" />
+      </div>
+      <h3
+        className="text-lg font-bold text-gray-900 dark:text-white mb-3"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {achievement.title}
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex-1">
+        {achievement.description}
+      </p>
+      <div className="mt-5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+        {achievement.chip}
+      </div>
+    </div>
+  );
+}
+
+function AchievementsSection() {
+  const headingRef = useScrollReveal(0);
+
+  return (
+    <section id="achievements" className="relative overflow-hidden py-24 px-6 bg-gray-50 dark:bg-gray-950">
+      <FloatingParticles count={80} />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div ref={headingRef} className="text-center mb-16">
+          <h2
+            className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Achievements
+          </h2>
+          <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            Recognitions & milestones.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ACHIEVEMENTS.map((achievement, i) => (
+            <AchievementCard key={achievement.title} achievement={achievement} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 function ContactSection() { return null; }
 function Footer() { return null; }
 
