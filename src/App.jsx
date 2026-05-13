@@ -40,8 +40,8 @@ const SOCIAL_LINKS = [
 ];
 
 const STATS = [
-  { label: 'Projects',      value: 8,   suffix: '+' },
-  { label: 'Hours Coding',  value: 500, suffix: '+' },
+  { label: 'Projects',      value: 6,   suffix: '+' },
+  { label: 'Hours Coding',  value: 300, suffix: '+' },
   { label: 'Hackathons',    value: 3,   suffix: '' },
   { label: 'Service Hours', value: 100, suffix: '+' },
 ];
