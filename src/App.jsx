@@ -87,7 +87,7 @@ const PROJECTS = [
     description: 'Built at a hackathon to protect low-income renters from predatory landlords. Uses Gemini 1.5 Pro to audit lease PDFs against Texas Property Code, flagging illegal clauses in real time. Verified tenant reviews are permanently minted to the Solana blockchain so landlords can never delete negative feedback. Includes an OCR-based gatekeeper system to prevent fake reviews and an evidence locker for timestamped move-in photos.',
     stack: ['React', 'Gemini API', 'Solana', 'Next.js', 'DigitalOcean'],
     category: 'Other',
-    github: '#',
+    github: 'https://github.com/CodingMastermind123/LegalDefender',
     demo: '#',
   },
   {
@@ -97,7 +97,7 @@ const PROJECTS = [
     description: 'Built at a hackathon using NASA\'s Exoplanet Archive and the Anthropic Claude API. Renders a force-directed knowledge graph using D3.js where users can explore connections between exoplanets, missions, and discoveries. Features an AI guide called Stella that answers questions about the data in natural language.',
     stack: ['React', 'D3.js', 'Claude API', 'NASA API', 'Vite'],
     category: 'Web',
-    github: '#',
+    github: 'https://github.com/Pri1s/cosmos',
     demo: '#',
   },
   {
@@ -107,7 +107,7 @@ const PROJECTS = [
     description: 'Trained a ResNet-50 convolutional neural network on a labeled chest X-ray dataset to classify images as normal or pneumonia. Handled class imbalance through weighted sampling and built a data pipeline with pandas for preprocessing and validation. Contributed the data engineering component including label mapping, sanity checks, and dataset splitting.',
     stack: ['Python', 'TensorFlow', 'ResNet-50', 'Pandas'],
     category: 'ML',
-    github: '#',
+    github: 'https://github.com/BioMedical-Disease-Classification/Resnet-50',
     demo: '#',
   },
   {
@@ -117,7 +117,7 @@ const PROJECTS = [
     description: 'Built a content-based music recommendation system using Spotify audio features like tempo, energy, and valence. Trained a TensorFlow model to compute similarity between tracks and surface personalized recommendations. Flask REST API serves the ML backend with a clean HTML/CSS frontend.',
     stack: ['Python', 'TensorFlow', 'Flask', 'Node.js', 'HTML', 'CSS'],
     category: 'Web',
-    github: '#',
+    github: 'https://github.com/cai-mci/goodbeats',
     demo: '#',
   },
   {
@@ -127,7 +127,7 @@ const PROJECTS = [
     description: 'Designed and implemented a hardware graphics engine from scratch using SystemVerilog as part of a team project. Responsible for RTL design, module integration, and simulation-based verification using Verilator. Demonstrates low-level understanding of how graphics pipelines work at the hardware level.',
     stack: ['SystemVerilog', 'C++', 'Verilator'],
     category: 'Hardware',
-    github: '#',
+    github: 'https://github.com/kfoura/Hardware-Graphics-Engine',
     demo: '#',
   },
   {
@@ -137,7 +137,7 @@ const PROJECTS = [
     description: 'Designed and built as a single-page React app with no component libraries. Features a Three.js particle vortex hero that reacts to mouse movement, custom scroll reveal animations, project filtering, a command palette (Cmd+K), dark/light mode, and a Konami code easter egg. The goal was to make something that felt genuinely designed rather than templated.',
     stack: ['React', 'Three.js', 'Tailwind CSS', 'Vite'],
     category: 'Web',
-    github: '#',
+    github: 'https://github.com/CodingMastermind123/Main-Portfolio',
     demo: '#',
     showDemo: true,
   },
