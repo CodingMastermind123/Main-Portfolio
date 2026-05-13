@@ -35,8 +35,8 @@ const TAGLINES = [
 
 const SOCIAL_LINKS = [
   { icon: FiGithub,   href: 'https://github.com/CodingMastermind123', label: 'GitHub' },
-  { icon: FiLinkedin, href: '#',                                       label: 'LinkedIn' },
-  { icon: FiMail,     href: 'mailto:aamrith@tamu.edu',                label: 'Email' },
+  { icon: FiLinkedin, href: 'https://www.linkedin.com/in/aamrith',    label: 'LinkedIn' },
+  { icon: FiMail,     href: 'mailto:aamrith4@gmail.com',             label: 'Email' },
 ];
 
 const STATS = [
@@ -205,7 +205,7 @@ const COMMAND_ACTIONS = [
   { label: 'Toggle Theme',       action: 'theme',   target: null,            icon: FiSun },
   { label: 'Open Resume',        action: 'link',    target: '/resume.pdf',   icon: FiDownload },
   { label: 'Visit GitHub',       action: 'link',    target: 'https://github.com/CodingMastermind123', icon: FiGithub },
-  { label: 'Visit LinkedIn',     action: 'link',    target: '#',             icon: FiLinkedin },
+  { label: 'Visit LinkedIn',     action: 'link',    target: 'https://www.linkedin.com/in/aamrith', icon: FiLinkedin },
 ];
 
 // ════════════════ 3.3 CUSTOM HOOKS ════════════════
