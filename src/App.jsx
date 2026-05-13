@@ -203,7 +203,7 @@ const COMMAND_ACTIONS = [
   { label: 'Go to Achievements', action: 'scroll',  target: '#achievements', icon: FiAward },
   { label: 'Go to Contact',      action: 'scroll',  target: '#contact',      icon: FiMail },
   { label: 'Toggle Theme',       action: 'theme',   target: null,            icon: FiSun },
-  { label: 'Open Resume',        action: 'link',    target: '/resume.pdf',   icon: FiDownload },
+  { label: 'Open Resume',        action: 'link',    target: `${import.meta.env.BASE_URL}resume.pdf`,   icon: FiDownload },
   { label: 'Visit GitHub',       action: 'link',    target: 'https://github.com/CodingMastermind123', icon: FiGithub },
   { label: 'Visit LinkedIn',     action: 'link',    target: 'https://www.linkedin.com/in/aamrith', icon: FiLinkedin },
 ];
@@ -1052,7 +1052,7 @@ function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
 
           {/* Resume pill — desktop only */}
           <a
-            href="/resume.pdf"
+            href={`${import.meta.env.BASE_URL}resume.pdf`}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors"
@@ -2077,7 +2077,7 @@ function ContactSection() {
 
             {/* Resume CTA */}
             <a
-              href="/resume.pdf"
+              href={`${import.meta.env.BASE_URL}resume.pdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shadow-lg shadow-indigo-500/20"
