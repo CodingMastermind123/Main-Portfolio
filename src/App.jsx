@@ -1200,7 +1200,7 @@ function AboutSection() {
               {/* Gradient ring */}
               <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-white dark:border-gray-900 transition-transform duration-300 group-hover:scale-105">
-                <img src="/profile.jpeg" alt="Amrith Akshintala" className="w-full h-full object-cover" style={{ objectPosition: 'center 18%' }} />
+                <img src={`${import.meta.env.BASE_URL}profile.jpeg`} alt="Amrith Akshintala" className="w-full h-full object-cover" style={{ objectPosition: 'center 18%' }} />
               </div>
             </div>
           </div>
