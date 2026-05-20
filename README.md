@@ -1,2 +1,2 @@
 # Main-Portfolio
-Amrith's Portfolio Website
+Amrith's Portfolio Website, built with HTML, CSS, and Javascript
