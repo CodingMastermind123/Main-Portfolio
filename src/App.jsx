@@ -1440,8 +1440,8 @@ function SkillsSection() {
             ))}
           </div>
 
-          {/* Radar chart */}
-          <div ref={radarRef} className="flex flex-col items-center gap-4">
+          {/* Radar chart — hidden for now */}
+          {/* <div ref={radarRef} className="flex flex-col items-center gap-4">
             <h3
               className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -1449,7 +1449,7 @@ function SkillsSection() {
               Proficiency Overview
             </h3>
             <SkillRadarChart />
-          </div>
+          </div> */}
         </div>
 
         {/* Currently Learning subsection */}
