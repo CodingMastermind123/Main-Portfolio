@@ -141,6 +141,15 @@ const PROJECTS = [
     demo: '#',
     showDemo: true,
   },
+  {
+    id: 7,
+    title: '2-Axis Gimbal',
+    summary: 'Building a camera stabilization system using servo motors and an IMU sensor',
+    description: 'Designing and building a 2-axis gimbal from scratch using servo motors controlled by an Arduino. Uses an MPU-6050 IMU to measure orientation and correct for unwanted movement in real time using a PID control loop. Currently in active development.',
+    stack: ['Arduino', 'C++', 'PID Control', 'IMU'],
+    category: 'Hardware',
+    inProgress: true,
+  },
 ];
 
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
@@ -1216,11 +1225,15 @@ function AboutSection() {
             </h3>
 
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              I'm a Computer Engineering freshman at Texas A&M, driven by one thing: building systems that actually work in the real world. Whether that's training an ML model, programming a microcontroller, or shipping a web app, I care about the full picture, not just one layer of the stack. More than anything, I want the things I build to actually matter and make an impact on people's lives.
+              Howdy! I'm Amrith, a Computer Engineering Honors student at Texas A&M, and I love building things that actually work. Whether that's an ML model, a microcontroller project, or a web app, I care about the full stack, not just one piece of it. I want what I build to genuinely matter to people and make a real difference.
             </p>
 
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Outside the lab I play tennis and basketball, hit the gym, and unwind with video games and good TV. I'm also an Eagle Scout, and that experience of leading projects and solving problems under pressure has stuck with me ever since.
+              I got into engineering because I was always the kind of person who needed to understand how things really work. That curiosity is what keeps me going when a project gets frustrating, and it's pushed me to explore everything from hardware design to machine learning to full stack web apps.
+            </p>
+
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+              Outside of school I play tennis and basketball, hit the gym, and unwind with video games and good TV. As an Eagle Scout, I also love the outdoors and try to get out for a hike or campout whenever I can.
             </p>
 
             {/* Social links */}
@@ -1592,6 +1605,7 @@ const SkillRadarChart = memo(function SkillRadarChart() {
 function ProjectCard({ project, onExpand, index, pulsing }) {
   const revealRef = useScrollReveal(index * 100);
   const [hovered, setHovered] = useState(false);
+  const isInProgress = !!project.inProgress;
 
   return (
     <div
@@ -1599,11 +1613,19 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => onExpand(project)}
-      className={`h-72 flex flex-col p-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 cursor-pointer ${pulsing ? 'card-pulse-anim' : ''}`}
+      className={`h-72 flex flex-col p-6 rounded-2xl cursor-pointer ${isInProgress ? 'bg-white dark:bg-[#161829]' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800'} ${pulsing ? 'card-pulse-anim' : ''}`}
       style={{
         position: 'relative',
-        boxShadow: hovered && !pulsing ? '0 0 18px rgba(99,102,241,0.35), 0 0 6px rgba(99,102,241,0.2)' : 'none',
-        borderColor: hovered && !pulsing ? '#6366f1' : undefined,
+        ...(isInProgress
+          ? {
+              border: '1.5px dashed rgba(168, 85, 247, 0.5)',
+              boxShadow: hovered && !pulsing ? '0 0 18px rgba(168,85,247,0.25), 0 0 6px rgba(168,85,247,0.12)' : 'none',
+            }
+          : {
+              boxShadow: hovered && !pulsing ? '0 0 18px rgba(99,102,241,0.35), 0 0 6px rgba(99,102,241,0.2)' : 'none',
+              borderColor: hovered && !pulsing ? '#6366f1' : undefined,
+            }
+        ),
         transform: hovered && !pulsing ? 'translateY(-3px)' : undefined,
         transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
       }}
@@ -1622,9 +1644,16 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
         />
       )}
       <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-          {project.category}
-        </span>
+        {isInProgress ? (
+          <span className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
+            <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
+            <span style={{ color: '#22c55e' }}>In Progress</span>
+          </span>
+        ) : (
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+            {project.category}
+          </span>
+        )}
         <FiCode className="text-gray-400" size={18} />
       </div>
       <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
@@ -1643,6 +1672,9 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
           </span>
         ))}
       </div>
+      {isInProgress && (
+        <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Repo coming soon</p>
+      )}
     </div>
   );
 }
@@ -1752,9 +1784,16 @@ function ExpandedProjectCard({ project, onClose }) {
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-                {project.category}
-              </span>
+              {project.inProgress ? (
+                <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                  <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
+                  <span style={{ color: '#22c55e' }}>In Progress</span>
+                </span>
+              ) : (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                  {project.category}
+                </span>
+              )}
               <button
                 onClick={() => closeRef.current()}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -1786,26 +1825,30 @@ function ExpandedProjectCard({ project, onClose }) {
               ))}
             </div>
 
-            <div className="flex gap-3 flex-wrap">
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
-              >
-                <FiGithub size={16} /> View Code
-              </a>
-              {project.showDemo && (
+            {project.inProgress ? (
+              <p style={{ fontSize: 12, color: '#6b7280' }}>Repo coming soon</p>
+            ) : (
+              <div className="flex gap-3 flex-wrap">
                 <a
-                  href={project.demo}
+                  href={project.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-80 transition-opacity"
                 >
-                  <FiExternalLink size={16} /> Live Demo
+                  <FiGithub size={16} /> View Code
                 </a>
-              )}
-            </div>
+                {project.showDemo && (
+                  <a
+                    href={project.demo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+                  >
+                    <FiExternalLink size={16} /> Live Demo
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
