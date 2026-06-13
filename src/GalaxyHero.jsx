@@ -6,32 +6,43 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const N       = 2800;   // total particles
-const DISPERSE = 420;   // ~15% disperse outward instead of joining sphere
+const N       = 3200;   // total particles
+const DISPERSE = 480;   // ~15% disperse outward instead of joining sphere
 const BRANCHES = 5;
-const GALAXY_R = 4.2;
-const SPIN     = 1.4;   // spiral twist per unit radius
-const SCATTER  = 0.28;
-const SCATTER_POW = 2.5;
+const GALAXY_R = 3.6;   // tighter radius → galaxy reads as a distinct object
+const SPIN     = 2.0;   // spiral twist per unit radius — more winding = clearer arms
+const SCATTER  = 0.13;  // arm thickness as a fraction of radius (azimuthal blur)
+const SCATTER_POW = 3.5;// higher → particles hug the arm spine; dark inter-arm gaps
+const ARM_RADIAL = 2.0; // radial scatter is wider than azimuthal → thin, long arms
+const CORE_POW = 1.35;  // radius concentration toward the bright core (u^CORE_POW)
 const SPHERE_R = 2.0;
-const TILT_X   = 1.0;  // galaxy disc tilt toward camera (radians ~57° from edge-on)
-// Section-transition particle terrain — a small accent, far subtler than the
-// sphere. The aerial perspective comes from sinking the near-horizontal plane
-// well below the camera's eye line: near rows spread under the viewer, far
-// rows compress toward a horizon, with a slight tilt lifting the far edge.
-const TERRAIN_W     = 5.6;  // grid half-width (x, world units)
-const TERRAIN_D     = 2.5;  // grid half-depth (z, world units)
-const TERRAIN_ZOFF  = -1.0; // push grid center away from the camera
-const TERRAIN_AMP   = 0.6;  // noise heightmap amplitude
-const TERRAIN_FREQ  = 0.5;  // noise sampling frequency (per world unit)
-const TERRAIN_SPEED = 0.45; // noise-offset drift speed while a transition is active
-const TERRAIN_TILT  = 0.22; // gentle tilt raising the far edge (radians)
-const TERRAIN_Y     = -1.6; // sink plane below the camera eye line → aerial view
-const TERRAIN_PEAK  = 0.9;  // cap formation below 1 — accent, not a second "moment"
-const AMBIENT_ALPHA = 0.16; // resting site-wide field alpha multiplier
-const TERRAIN_ALPHA = 0.7;  // alpha multiplier at terrain peaks, full formation
+const TILT_X   = 1.18;  // galaxy disc tilt toward camera (radians ~68° from edge-on)
+
+// Always-present ambient terrain — a persistent grid-based particle heightmap
+// living behind every section. The aerial perspective comes from sinking the
+// near-horizontal plane well below the camera's eye line: near rows spread
+// under the viewer, far rows compress toward a horizon, with a slight tilt
+// lifting the far edge. Formed-ness is driven by scroll velocity, not section
+// boundaries — fast scroll forms it, settling disperses it back to ambient.
+const TERRAIN_W      = 5.6;  // grid half-width (x, world units)
+const TERRAIN_D      = 2.5;  // grid half-depth (z, world units)
+const TERRAIN_ZOFF   = -1.0; // push grid center away from the camera
+const TERRAIN_AMP    = 0.6;  // noise heightmap amplitude
+const TERRAIN_FREQ   = 0.5;  // noise sampling frequency (per world unit)
+const TERRAIN_TILT   = 0.22; // gentle tilt raising the far edge (radians)
+const TERRAIN_Y      = -1.6; // sink plane below the camera eye line → aerial view
+const TERRAIN_BASE   = 0.16; // faint always-present terrain when fully settled
+const TERRAIN_VEL_GAIN   = 0.58; // extra formation from fast scrolling
+const TERRAIN_BOUND_GAIN = 0.18; // extra formation/brightness near section edges
+const TERRAIN_MAX    = 0.84; // cap on formed-ness — never a full "moment"
+const TERRAIN_SCROLL_K   = 0.00095; // noise-offset flow per scrolled pixel
+const TERRAIN_IDLE_DRIFT = 0.05; // slow constant noise drift so it's alive when idle
+const VEL_FULL       = 2.4;  // px/ms scroll speed mapped to full velocity (=1)
+const VEL_DECAY      = 2.6;  // per-second decay of the velocity proxy toward 0
+const AMBIENT_ALPHA  = 0.16; // resting site-wide field alpha multiplier
+const TERRAIN_ALPHA  = 0.62; // alpha multiplier at terrain peaks, full formation
 const HIT_RADIUS = 36;  // px — 2D screen-space hover radius around nav nodes
-const LOCK_MS  = 650;  // scroll pause when the sphere completes
+const LOCK_MS  = 700;  // scroll pause (ms) when the sphere lands — 600–800 range
 
 // Precomputed terrain tilt rotation (about x-axis, same scheme as the galaxy disc)
 const T_COS = Math.cos(TERRAIN_TILT);
@@ -74,14 +85,23 @@ function buildGalaxyData() {
     SCATTER * r;
 
   for (let i = 0; i < N; i++) {
-    const r      = Math.sqrt(Math.random()) * GALAXY_R;
+    // u^CORE_POW (>1) packs particles toward the center → dense bright bulge,
+    // sparser arms reaching out. (sqrt would give flat areal density instead.)
+    const r      = Math.pow(Math.random(), CORE_POW) * GALAXY_R;
     const branch = ((i % BRANCHES) / BRANCHES) * Math.PI * 2;
-    const spin   = r * SPIN;
+    const angle  = branch + r * SPIN;
 
-    armAngles[i] = branch + spin;
+    armAngles[i] = angle;
     radii[i]     = r;
-    scatterX[i]  = s(r);
-    scatterZ[i]  = s(r);
+
+    // Split scatter along the spine: wide radial component (long, continuous
+    // arms) but narrow azimuthal component (arms stay thin so inter-arm gaps
+    // read dark instead of the arms merging into a uniform field).
+    const radial = s(r) * ARM_RADIAL;
+    const azim   = s(r);
+    const ca = Math.cos(angle), sa = Math.sin(angle);
+    scatterX[i]  = radial * ca - azim * sa;
+    scatterZ[i]  = radial * sa + azim * ca;
     scatterY[i]  = s(r) * 0.3; // flatten disc
   }
   return { armAngles, radii, scatterX, scatterZ, scatterY };
@@ -240,18 +260,22 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Live position buffer — starts at galaxy positions, morphs toward sphere
     const positions = new Float32Array(N * 3);
 
-    // Size tiers: 60% small, 30% medium, 10% large
-    const aSizeArr = new Float32Array(N);
+    // Size + base brightness keyed to galaxy radius: a dense, bright, large-
+    // particle core fading to small, dim outer-arm particles. core2 (the
+    // squared core factor) gives a steep, concentrated falloff so the core
+    // clearly out-sizes and out-shines the arms.
+    const aSizeArr  = new Float32Array(N);
+    const baseAlpha = new Float32Array(N);
     for (let i = 0; i < N; i++) {
-      const roll = Math.random();
-      if      (roll < 0.6) aSizeArr[i] = 0.02  + Math.random() * 0.01;
-      else if (roll < 0.9) aSizeArr[i] = 0.03  + Math.random() * 0.015;
-      else                 aSizeArr[i] = 0.045 + Math.random() * 0.02;
+      const nr    = Math.min(1, radii[i] / GALAXY_R);
+      const core2 = (1 - nr) * (1 - nr);
+      aSizeArr[i]  = (0.015 + core2 * 0.050) * (0.80 + Math.random() * 0.30);
+      baseAlpha[i] = (0.40 + core2 * 0.60)  * (0.85 + Math.random() * 0.15);
     }
     // Immutable copy — terrain peaks scale aSizeArr per-frame, then restore
     const baseSize = aSizeArr.slice();
 
-    // Color: radius-based gradient core → arms
+    // Color: radius-based gradient — bright lavender core → violet outer arms
     const aColorArr   = new Float32Array(N * 3);
     const CORE_COL    = new THREE.Color(0xc4b5fd);
     const MID_COL     = new THREE.Color(0xa78bfa);
@@ -270,7 +294,6 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Twinkle
     const twinkleFreq  = Float32Array.from({ length: N }, () => 0.3 + Math.random() * 0.5);
     const twinklePhase = Float32Array.from({ length: N }, () => Math.random() * Math.PI * 2);
-    const baseAlpha    = Float32Array.from({ length: N }, () => 0.65 + Math.random() * 0.35);
     const aAlphaArr    = new Float32Array(N);
 
     // Name-hover scatter targets
@@ -403,38 +426,77 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Smoothed toward postTarget each frame in the animate loop.
     let post       = 0;
     let postTarget = 0;
-    // terrain: 0 = dispersed ambient, 1 = fully formed transition heightmap.
-    // Boundary ScrollTriggers write terrainTarget; the loop smooths toward it.
-    let terrain       = 0;
-    let terrainTarget = 0;
-    // Noise-sampling offset. terrainDir comes from ScrollTrigger's direction:
-    // +1 (scrolling down) drifts the dunes one way, −1 reverses the flow.
-    let noiseOff   = 0;
-    let terrainDir = 1;
+    // terrain: 0 = ambient dispersed, 1 = fully formed heightmap. Driven by
+    // scroll velocity + section-edge proximity (not boundary triggers), so it
+    // forms while scrolling and disperses back toward ambient when settled.
+    let terrain    = 0;
+    // Velocity proxy (0..1), bumped by the scroll handler, decays each frame.
+    let velRaw     = 0;
+    // Noise-sampling flow. scrollFlow advances with scroll distance (sign =
+    // direction, so scrolling up reverses); idleFlow is a slow constant creep
+    // so the dunes stay subtly alive when the user is settled.
+    let scrollFlow = 0;
+    let idleFlow   = 0;
+    // Section-edge proximity pulse (0..1), recomputed every few frames.
+    let boundaryPulse = 0;
+    let frame      = 0;
     // Whether aSizeArr held terrain-scaled values last frame (needs restore)
     let sizesWereScaled = false;
 
+    // ── Scroll velocity / flow tracking ───────────────────────────────────
+    // Drives terrain formed-ness (fast scroll → more formed) and the noise
+    // flow direction (scrolling down advances it, up reverses). No per-section
+    // triggers — the terrain is a persistent layer, not a boundary event.
+    let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let lastScrollT = performance.now();
+    const onScroll = () => {
+      const y   = window.scrollY || window.pageYOffset || 0;
+      const now = performance.now();
+      const dy  = y - lastScrollY;
+      const dt  = Math.max(8, now - lastScrollT);
+      const v   = Math.abs(dy) / dt;                 // px per ms
+      velRaw     = Math.min(1, Math.max(velRaw, v / VEL_FULL));
+      scrollFlow += dy * TERRAIN_SCROLL_K;           // sign → flow direction
+      lastScrollY = y;
+      lastScrollT = now;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Section elements for the edge-proximity brightness pulse.
+    const sectionEls = ['about', 'skills', 'projects', 'achievements', 'contact']
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+
     // ── Completion scroll-lock ────────────────────────────────────────────
-    // When the sphere fully forms, briefly swallow wheel/touch input so the
-    // moment lands before the user scrolls on. Fires once per entry: disarmed
-    // on fire, re-armed only after a genuine scroll back up (progress < 0.6),
-    // so boundary jitter around progress≈1 can't re-trigger it.
-    let lockArmed = true;
+    // When the sphere is essentially settled (progress > 0.97) we briefly
+    // swallow wheel/touch input so it visibly "lands" before scroll resumes.
+    // Fires once per entry; hasLocked resets only when the user scrolls fully
+    // back out of the sphere section (onLeaveBack), so end-of-pin jitter near
+    // progress≈1 can't re-trigger it.
+    let hasLocked = false;
     let lockTimer = 0;
     const blockScrollEvent = (e) => e.preventDefault();
-    const unlockScroll = () => {
-      window.removeEventListener('wheel', blockScrollEvent);
-      window.removeEventListener('touchmove', blockScrollEvent);
+    const engageLock = () => {
+      window.addEventListener('wheel', blockScrollEvent, { passive: false });
+      window.addEventListener('touchmove', blockScrollEvent, { passive: false });
+    };
+    // Smooth release: drop the block on the next frame so the wheel event in
+    // flight at unlock isn't consumed mid-handler (which reads as an abrupt
+    // jump) — scroll resumes from rest instead of bursting.
+    const releaseLock = () => {
+      requestAnimationFrame(() => {
+        window.removeEventListener('wheel', blockScrollEvent);
+        window.removeEventListener('touchmove', blockScrollEvent);
+      });
     };
 
-    // ── ScrollTriggers ────────────────────────────────────────────────────
+    // ── ScrollTrigger ─────────────────────────────────────────────────────
     // The hero section itself is the pinned morph stage: text and galaxy are
     // one scroll unit. Scrolling scrubs the morph in place — the hero content
     // fades/lifts out as part of it — instead of the text scrolling away
     // first and the (fixed) galaxy morphing afterwards.
     let st;
     let heroFade;
-    const terrainTriggers = [];
     if (!prefersReduced) {
       heroFade = gsap.timeline()
         .to('#hero [data-hero-fade="content"]', { autoAlpha: 0, y: -70, ease: 'power1.in', duration: 0.35 }, 0)
@@ -450,33 +512,26 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         end: '+=180%',
         onUpdate: (self) => {
           morphProgressRef.current = self.progress;
-          if (self.progress >= 0.999 && lockArmed) {
-            lockArmed = false;
-            window.addEventListener('wheel', blockScrollEvent, { passive: false });
-            window.addEventListener('touchmove', blockScrollEvent, { passive: false });
-            lockTimer = setTimeout(unlockScroll, LOCK_MS);
-          } else if (self.progress < 0.6 && !lockArmed) {
-            lockArmed = true;
+          // Engage once the sphere is settled (>0.97), not at the exact end
+          // where scrub jitter lives — so the lock catches a clean landing.
+          if (self.progress > 0.97 && !hasLocked) {
+            hasLocked = true;
+            engageLock();
+            clearTimeout(lockTimer);
+            lockTimer = setTimeout(releaseLock, LOCK_MS);
+          } else if (self.progress < 0.5 && hasLocked) {
+            // Genuine scroll back out of the formed-sphere zone (morph undone
+            // past halfway) re-arms the lock. The hero is pinned at top top, so
+            // onLeaveBack can never fire (no scroll space above start) — this
+            // threshold is the reliable "scrolled back out" signal, and being
+            // well below the 0.97 engage point, end-of-pin jitter can't re-arm.
+            hasLocked = false;
+            clearTimeout(lockTimer);
+            releaseLock();
           }
         },
         onLeave:     () => { postTarget = 1; },
         onEnterBack: () => { postTarget = 0; },
-      });
-
-      // Section-boundary terrain convergence: as each boundary crosses the
-      // viewport, progress 0→1 maps to converge→peak→disperse via sin(p·π),
-      // capped at TERRAIN_PEAK. direction flips the noise-drift sign so the
-      // dunes flow forward or backward with the scroll.
-      ['#skills', '#projects', '#achievements', '#contact'].forEach((sel) => {
-        terrainTriggers.push(ScrollTrigger.create({
-          trigger: sel,
-          start: 'top 85%',
-          end: 'top 25%',
-          onUpdate: (self) => {
-            terrainTarget = Math.sin(self.progress * Math.PI) * TERRAIN_PEAK;
-            if (self.direction) terrainDir = self.direction;
-          },
-        }));
       });
     }
 
@@ -492,10 +547,9 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       const elapsed = clock.elapsedTime;
       const morphP  = morphProgressRef.current;
 
-      // Phase scalars. post: sphere phase → ambient field phase. terrain:
-      // ambient → transition heightmap. Both smoothed to absorb scroll jitter.
-      // Reduced motion: no ScrollTriggers exist, so derive the phase directly
-      // from whether the hero section is on screen (instant, no motion).
+      // Phase scalars. post: sphere phase → ambient field phase, smoothed to
+      // absorb scroll jitter. Reduced motion: no ScrollTriggers exist, so
+      // derive the phase from whether the hero is on screen (instant).
       if (prefersReduced) {
         const heroRect = document.getElementById('hero')?.getBoundingClientRect();
         postTarget = (heroRect && heroRect.bottom > 0 && heroRect.top < h) ? 0 : 1;
@@ -503,12 +557,39 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       } else {
         post += (postTarget - post) * Math.min(1, delta * 2.5);
       }
-      terrain += (terrainTarget - terrain) * Math.min(1, delta * 4);
-      // Drift the noise-sampling offset only while a transition is active;
-      // the sign follows scroll direction, so the dunes appear to flow
-      // forward when scrolling down and backward when scrolling up.
-      noiseOff += delta * TERRAIN_SPEED * terrainDir * terrain;
-      const terrainActive = terrain > 0.001;
+
+      // Velocity proxy decays toward 0 between scroll events → the terrain
+      // disperses back toward ambient when the user settles.
+      velRaw *= Math.exp(-delta * VEL_DECAY);
+
+      // Section-edge proximity pulse (throttled to every 4th frame): the
+      // terrain firms up / brightens as a section boundary crosses mid-
+      // viewport. Only matters once the field phase is showing.
+      if ((frame++ & 3) === 0 && post > 0.05 && sectionEls.length) {
+        let nearest = 1;
+        for (let s = 0; s < sectionEls.length; s++) {
+          const top = sectionEls[s].getBoundingClientRect().top;
+          const d   = Math.abs(top - h * 0.5) / h;
+          if (d < nearest) nearest = d;
+        }
+        boundaryPulse = Math.max(0, 1 - nearest * 3.5);
+      }
+
+      // Terrain formed-ness: faint always-present base + scroll velocity +
+      // boundary pulse, capped so it stays a background layer, never a moment.
+      const terrainTarget = Math.min(
+        TERRAIN_MAX,
+        TERRAIN_BASE + velRaw * TERRAIN_VEL_GAIN + boundaryPulse * TERRAIN_BOUND_GAIN
+      );
+      terrain += (terrainTarget - terrain) * Math.min(1, delta * 3);
+
+      // Noise flow: scroll distance advances/reverses it; a slow idle creep
+      // keeps the dunes subtly alive when the user is settled.
+      idleFlow += delta * TERRAIN_IDLE_DRIFT;
+      const flow = scrollFlow + idleFlow;
+
+      // Sample terrain noise only in the field phase (skips hero/sphere).
+      const terrainActive = post > 0.01 && terrain > 0.001;
       const updateSizes   = terrainActive || sizesWereScaled;
 
       // Camera parallax (fades with morph)
@@ -575,8 +656,9 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
           const txu = gridX[i];
           const tzu = gridZ[i];
           // Offsetting the sampling coords (not the grid) morphs the dunes
-          // in place — peaks rise and valleys form as noiseOff drifts.
-          const nv  = snoise2D(txu * TERRAIN_FREQ + noiseOff, tzu * TERRAIN_FREQ - noiseOff * 0.35);
+          // in place — peaks rise and valleys form as the scroll-driven flow
+          // drifts (forward on scroll-down, reversed on scroll-up).
+          const nv  = snoise2D(txu * TERRAIN_FREQ + flow, tzu * TERRAIN_FREQ - flow * 0.35);
           heightN   = nv * 0.5 + 0.5;
           const tyu = nv * TERRAIN_AMP;
           // Sunk below the camera eye line with a gentle far-edge tilt, the
@@ -743,11 +825,12 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     return () => {
       st?.kill(true); // revert pin-spacer DOM/styles (StrictMode-safe)
       heroFade?.revert(); // restore hero-content inline opacity/transform
-      terrainTriggers.forEach((t) => t.kill());
       clearTimeout(lockTimer);
-      unlockScroll();
+      window.removeEventListener('wheel', blockScrollEvent);
+      window.removeEventListener('touchmove', blockScrollEvent);
       io.disconnect();
       cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('pointermove', handlePointerMove);

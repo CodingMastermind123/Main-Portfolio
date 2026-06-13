@@ -787,10 +787,19 @@ function HeroSection({ isMobile, nameHoveredRef }) {
         </div>
       </div>
 
-      {/* Scroll cue — scrolls through the pinned hero morph to About */}
+      {/* Scroll cue — smooth-scrolls the hero pin to the fully-formed nav
+          sphere (~progress 0.98) so the click plays the whole galaxy→sphere
+          morph and lands on the sphere. Mobile has no pin, so fall back to
+          scrolling to the next section. */}
       <button
         data-hero-fade="cue"
-        onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => {
+          if (isMobile) {
+            document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.scrollTo({ top: window.innerHeight * 1.78, behavior: 'smooth' });
+          }
+        }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-500 dark:text-gray-400 hover:text-purple-400 animate-bounce"
         aria-label="Scroll to explore"
       >
