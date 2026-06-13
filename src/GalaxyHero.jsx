@@ -16,7 +16,12 @@ const SCATTER_POW = 3.5;// higher → particles hug the arm spine; dark inter-ar
 const ARM_RADIAL = 2.0; // radial scatter is wider than azimuthal → thin, long arms
 const CORE_POW = 1.35;  // radius concentration toward the bright core (u^CORE_POW)
 const SPHERE_R = 2.0;
-const TILT_X   = 1.18;  // galaxy disc tilt toward camera (radians ~68° from edge-on)
+const TILT_X   = 0.52;  // galaxy disc tilt: low angle from edge-on → reads as a
+                        // clear inclined ellipse with depth (sin≈0.5 axis ratio),
+                        // not a flat face-on pinwheel
+const GALAXY_X = 1.7;   // world-X offset of the galaxy disc → sits in the right
+                        // half of the viewport (~67% from left). Decays to 0 as
+                        // the disc morphs into the centered nav sphere.
 
 // Always-present ambient terrain — a persistent grid-based particle heightmap
 // living behind every section. The aerial perspective comes from sinking the
@@ -500,7 +505,6 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     if (!prefersReduced) {
       heroFade = gsap.timeline()
         .to('#hero [data-hero-fade="content"]', { autoAlpha: 0, y: -70, ease: 'power1.in', duration: 0.35 }, 0)
-        .to('#hero [data-hero-fade="cue"]',     { autoAlpha: 0,         ease: 'power1.in', duration: 0.2  }, 0)
         .to({}, { duration: 1 }, 0); // pad timeline to the full pin length
 
       st = ScrollTrigger.create({
@@ -618,8 +622,10 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         const uy = scatterY[i];
         const uz = Math.sin(angle) * r + scatterZ[i];
 
-        // Tilt galaxy disc toward camera
-        const gx =  ux;
+        // Tilt galaxy disc toward camera, offset into the right half of the
+        // viewport. The X offset rides on gx, so the morph lerp below carries
+        // the disc back to the centered sphere target as morphP advances.
+        const gx =  ux + GALAXY_X;
         const gy =  uy * Math.cos(TILT_X) - uz * Math.sin(TILT_X);
         const gz =  uy * Math.sin(TILT_X) + uz * Math.cos(TILT_X);
 

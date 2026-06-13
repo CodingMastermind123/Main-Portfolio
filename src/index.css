@@ -31,6 +31,30 @@ body {
   transition: none !important;
 }
 
+/* Hero plain-text links — muted white that brightens to full white on hover,
+   with an underline (hover only) and a subtle arrow nudge. */
+.hero-text-link {
+  font-family: var(--font-mono);
+  font-size: clamp(0.78rem, 1vw, 0.95rem);
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-text-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.hero-text-link span {
+  transition: transform 250ms ease;
+}
+.hero-text-link:hover span {
+  transform: translateX(3px);
+}
+
 /* ════════════════ 2.3 GRAIN TEXTURE ════════════════ */
 body::after {
   content: '';

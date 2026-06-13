@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { GalaxyScene } from './GalaxyHero.jsx';
 import {
   FiGithub, FiLinkedin, FiMail, FiExternalLink, FiDownload,
-  FiSun, FiMoon, FiMenu, FiX, FiSearch, FiChevronDown,
+  FiSun, FiMoon, FiMenu, FiX, FiSearch,
   FiArrowRight, FiAward, FiCode, FiLayers, FiZap, FiUser,
   FiActivity, FiBox, FiCoffee,
 } from 'react-icons/fi';
@@ -24,13 +24,6 @@ const NAV_LINKS = [
   { label: 'Projects',     href: '#projects' },
   { label: 'Achievements', href: '#achievements' },
   { label: 'Contact',      href: '#contact' },
-];
-
-const TAGLINES = [
-  'Computer Engineering Honors @ Texas A&M',
-  'Building with ML & Hardware',
-  'Eagle Scout & Problem Solver',
-  'Open to Research & Internships',
 ];
 
 const SOCIAL_LINKS = [
@@ -566,44 +559,6 @@ function FloatingParticles({ count = 45 }) {
 
 // ════════════════ HERO COMPONENTS ════════════════
 
-// Step 4.3 — Typing animation: forward 50ms/char, pause 2s, delete 30ms/char
-function TypedText({ strings }) {
-  const [stringIndex, setStringIndex] = useState(0);
-  const [charIndex,   setCharIndex]   = useState(0);
-  const [isDeleting,  setIsDeleting]  = useState(false);
-
-  const displayText = strings[stringIndex].slice(0, charIndex);
-
-  useEffect(() => {
-    const current = strings[stringIndex];
-    let timeout;
-
-    if (!isDeleting) {
-      if (charIndex < current.length) {
-        timeout = setTimeout(() => setCharIndex(i => i + 1), 50);
-      } else {
-        timeout = setTimeout(() => setIsDeleting(true), 2000);
-      }
-    } else {
-      if (charIndex > 0) {
-        timeout = setTimeout(() => setCharIndex(i => i - 1), 30);
-      } else {
-        setIsDeleting(false);
-        setStringIndex(i => (i + 1) % strings.length);
-      }
-    }
-
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, stringIndex, strings]);
-
-  return (
-    <span>
-      {displayText}
-      <span className="animate-pulse ml-0.5 text-indigo-500">|</span>
-    </span>
-  );
-}
-
 // Step 4.4 — Pulsing "currently building" badge
 function CurrentlyBuildingBadge() {
   return null;
@@ -666,7 +621,7 @@ function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
               <li key={href}>
                 <button
                   onClick={() => document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })}
-                  className={`relative text-sm font-medium py-1 transition-colors ${
+                  className={`relative text-sm font-medium py-1 font-mono transition-colors ${
                     isActive
                       ? 'text-indigo-600 dark:text-indigo-400'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -740,71 +695,97 @@ function HeroSection({ isMobile, nameHoveredRef }) {
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 3,
-          background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 55% 45% at 30% 46%, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
         }}
       />
 
       {/* Hero content — data-hero-fade: scrubbed out by the galaxy→sphere
-          morph ScrollTrigger (the hero section itself is the pinned stage) */}
-      <div data-hero-fade="content" className="relative flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto" style={{ zIndex: 10 }}>
-        <h1
-          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-gray-900 dark:text-white cursor-default select-none"
-          style={{ fontFamily: 'var(--font-display)' }}
-          onMouseEnter={() => { if (nameHoveredRef) nameHoveredRef.current = true; }}
-          onMouseLeave={() => { if (nameHoveredRef) nameHoveredRef.current = false; }}
+          morph ScrollTrigger (the hero section itself is the pinned stage).
+          Left-aligned in the left ~55%; the right side is left open so the
+          galaxy can breathe. The outer wrapper handles vertical placement
+          (slightly above center) so GSAP's transform on the inner node
+          doesn't fight the centering. */}
+      <div
+        className="absolute inset-0 flex items-center"
+        style={{ zIndex: 10 }}
+      >
+        <div
+          data-hero-fade="content"
+          className="w-full max-w-[90%] md:max-w-[50%] pl-6 sm:pl-10 md:pl-16 lg:pl-24 text-left"
         >
-          Amrith<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
-            Akshintala
-          </span>
-        </h1>
-
-        <p className="mt-4 text-xl md:text-2xl text-gray-600 dark:text-gray-400 min-h-[2rem]">
-          <TypedText strings={TAGLINES} />
-        </p>
-
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href="#projects"
-            onClick={e => {
-              e.preventDefault();
-              document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' });
+          {/* Metadata label — sits above the name */}
+          <p
+            className="select-none"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'clamp(0.65rem, 0.9vw, 0.85rem)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              color: 'rgba(167, 139, 250, 0.7)',
             }}
-            className="px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-2 transition-colors"
           >
-            View Projects <FiArrowRight />
-          </a>
-          <a
-            href="#contact"
-            onClick={e => {
-              e.preventDefault();
-              document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+            CE Honors · Texas A&amp;M · 2029
+          </p>
+
+          {/* Name — Space Grotesk 700, white over subtle lavender tint */}
+          <h1
+            className="cursor-default select-none"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: 'clamp(2.25rem, 6vw, 6.5rem)',
+              lineHeight: 1.04,
+              letterSpacing: '-0.02em',
+              marginTop: 'clamp(1.5rem, 3.5vh, 2.75rem)',
             }}
-            className="px-6 py-3 rounded-full border border-gray-400 dark:border-gray-700 hover:border-indigo-500 text-gray-700 dark:text-gray-300 font-semibold flex items-center gap-2 transition-colors"
+            onMouseEnter={() => { if (nameHoveredRef) nameHoveredRef.current = true; }}
+            onMouseLeave={() => { if (nameHoveredRef) nameHoveredRef.current = false; }}
           >
-            Contact Me <FiMail />
-          </a>
+            <span style={{ color: '#ffffff' }}>Amrith</span><br />
+            <span style={{ color: '#e8e0ff' }}>Akshintala</span>
+          </h1>
+
+          {/* Tagline — static, monospace, slightly larger than the label */}
+          <p
+            className="select-none"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'clamp(0.8rem, 1.15vw, 1.05rem)',
+              color: 'rgba(255, 255, 255, 0.6)',
+              marginTop: 'clamp(1.5rem, 3.5vh, 2.5rem)',
+            }}
+          >
+            Building at the intersection of ML &amp; Hardware
+          </p>
+
+          {/* Plain text links with hover underline + arrow nudge */}
+          <div
+            className="flex flex-wrap items-center"
+            style={{ marginTop: 'clamp(2rem, 4.5vh, 3rem)', gap: 'clamp(1.5rem, 3vw, 3rem)' }}
+          >
+            <a
+              href="#projects"
+              onClick={e => {
+                e.preventDefault();
+                document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="hero-text-link"
+            >
+              View Projects <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="#contact"
+              onClick={e => {
+                e.preventDefault();
+                document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="hero-text-link"
+            >
+              Get in Touch <span aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
       </div>
-
-      {/* Scroll cue — smooth-scrolls the hero pin to the fully-formed nav
-          sphere (~progress 0.98) so the click plays the whole galaxy→sphere
-          morph and lands on the sphere. Mobile has no pin, so fall back to
-          scrolling to the next section. */}
-      <button
-        data-hero-fade="cue"
-        onClick={() => {
-          if (isMobile) {
-            document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            window.scrollTo({ top: window.innerHeight * 1.78, behavior: 'smooth' });
-          }
-        }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-500 dark:text-gray-400 hover:text-purple-400 animate-bounce"
-        aria-label="Scroll to explore"
-      >
-        <FiChevronDown size={28} />
-      </button>
     </section>
   );
 }
@@ -908,11 +889,11 @@ function StatChip({ label, value, suffix, delay }) {
     >
       <span
         className="text-3xl font-black text-indigo-600 dark:text-indigo-400"
-        style={{ fontFamily: 'var(--font-display)' }}
+        style={{ fontFamily: 'var(--font-mono)' }}
       >
         {count}{suffix}
       </span>
-      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</span>
+      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium font-mono">{label}</span>
     </div>
   );
 }
@@ -938,7 +919,7 @@ function SkillCard({ skill, delay }) {
       className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 cursor-default"
     >
       <Icon size={26} style={{ color: skill.color }} />
-      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 text-center leading-tight">
+      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 text-center leading-tight font-mono">
         {skill.name}
       </span>
     </div>
@@ -952,7 +933,7 @@ function SkillCategory({ category, skills, baseDelay }) {
   return (
     <div>
       <div ref={labelRef} className="mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 font-mono">
           {category}
         </h3>
       </div>
@@ -983,8 +964,8 @@ function LearningCard({ item, started }) {
       className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
     >
       <div className="flex items-baseline justify-between mb-1">
-        <span className="text-sm font-medium text-gray-900 dark:text-white">{name}</span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{stage}</span>
+        <span className="text-sm font-medium text-gray-900 dark:text-white font-mono">{name}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">{stage}</span>
       </div>
       <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{desc}</p>
       <div
@@ -1034,7 +1015,7 @@ function CurrentlyLearning() {
       {/* Label with pulsing dot */}
       <div ref={labelRef} className="flex items-center gap-2 mb-4">
         <span className="pulse-dot" aria-hidden="true" />
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 font-mono">
           Currently Learning
         </h3>
       </div>
@@ -1276,12 +1257,12 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
       )}
       <div className="flex items-start justify-between mb-3">
         {isInProgress ? (
-          <span className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
+          <span className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 font-mono">
             <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
             <span style={{ color: '#22c55e' }}>In Progress</span>
           </span>
         ) : (
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-mono">
             {project.category}
           </span>
         )}
@@ -1297,14 +1278,14 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
         {project.stack.slice(0, 4).map((tech) => (
           <span
             key={tech}
-            className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono"
           >
             {tech}
           </span>
         ))}
       </div>
       {isInProgress && (
-        <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Repo coming soon</p>
+        <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Repo coming soon</p>
       )}
     </div>
   );
@@ -1416,12 +1397,12 @@ function ExpandedProjectCard({ project, onClose }) {
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               {project.inProgress ? (
-                <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 font-mono">
                   <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
                   <span style={{ color: '#22c55e' }}>In Progress</span>
                 </span>
               ) : (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-mono">
                   {project.category}
                 </span>
               )}
@@ -1449,7 +1430,7 @@ function ExpandedProjectCard({ project, onClose }) {
               {project.stack.map((tech) => (
                 <span
                   key={tech}
-                  className="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  className="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono"
                 >
                   {tech}
                 </span>
@@ -1457,7 +1438,7 @@ function ExpandedProjectCard({ project, onClose }) {
             </div>
 
             {project.inProgress ? (
-              <p style={{ fontSize: 12, color: '#6b7280' }}>Repo coming soon</p>
+              <p style={{ fontSize: 12, color: '#6b7280', fontFamily: 'var(--font-mono)' }}>Repo coming soon</p>
             ) : (
               <div className="flex gap-3 flex-wrap">
                 <a
@@ -1527,7 +1508,7 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
           Projects
         </h2>
         <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
-        <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+        <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-xl mx-auto font-mono">
           A selection of things I've built — spanning ML, embedded hardware, and the web.
         </p>
       </div>
@@ -1543,7 +1524,7 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
               setExpandedProject(null);
               setPulsingId(null);
             }}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border font-mono transition-colors ${
               activeFilter === cat
                 ? 'bg-indigo-600 border-indigo-600 text-white'
                 : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-400 hover:text-indigo-500'
@@ -1638,7 +1619,7 @@ function AchievementCard({ achievement, index }) {
       <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex-1">
         {achievement.description}
       </p>
-      <div className="mt-5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+      <div className="mt-5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono">
         {achievement.chip}
       </div>
     </div>
@@ -1660,7 +1641,7 @@ function AchievementsSection() {
             Achievements
           </h2>
           <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500 mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-mono">
             Recognitions & milestones.
           </p>
         </div>
@@ -1712,7 +1693,7 @@ function ContactSection() {
             Get In Touch
           </h2>
           <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500 mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-mono">
             Have a project idea, research opportunity, or just want to say hi? I'd love to hear from you.
           </p>
         </div>
@@ -1775,7 +1756,7 @@ function ContactSection() {
               )}
 
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 font-mono">
                   Name
                 </label>
                 <input
@@ -1791,7 +1772,7 @@ function ContactSection() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 font-mono">
                   Email
                 </label>
                 <input
@@ -1807,7 +1788,7 @@ function ContactSection() {
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 font-mono">
                   Message
                 </label>
                 <textarea
@@ -1843,7 +1824,7 @@ function Footer() {
   return (
     <footer className="relative border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 py-10 px-6">
       <div className="relative z-10 max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left font-mono">
           © {year} Amrith Akshintala. Built with React &amp; Three.js.
         </p>
         <div className="flex items-center gap-5">
@@ -1918,7 +1899,7 @@ function MobileNav({ open, onClose }) {
                 <button
                   onClick={() => handleLink(href)}
                   className="text-3xl font-bold text-white hover:text-indigo-400 transition-colors"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {label}
                 </button>
@@ -1986,7 +1967,7 @@ function ProjectModal({ project, onClose }) {
         </button>
 
         {/* Category badge */}
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 mb-4 inline-block">
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 mb-4 inline-block font-mono">
           {project.category}
         </span>
 
