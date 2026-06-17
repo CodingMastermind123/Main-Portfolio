@@ -635,23 +635,25 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
           terrainEase = tp * tp * (3 - 2 * tp);
           const txu = gridX[i];
           const tzu = gridZ[i];
-          // Height / reshape: sampled at the FIXED grid cell (+ flow), independent
-          // of the forward-glide below. Offsetting the sampling coords (not the
-          // grid) morphs the dunes in place — peaks rise and valleys form as the
-          // scroll-driven flow drifts (forward on scroll-down, reversed on up).
-          const nv  = snoise2D(txu * TERRAIN_FREQ + flow, tzu * TERRAIN_FREQ - flow * 0.35);
-          heightN   = nv * 0.5 + 0.5;
-          const tyu = nv * TERRAIN_AMP;
-          // Forward-glide: translate the particle's DEPTH (not its noise input)
-          // toward the camera and wrap it within the terrain band so it recycles.
-          // Perspective then makes near particles stream past faster than far ones
-          // — a parallax fly-over that runs independently of the height reshape.
+          // Forward-glide: the particle's DEPTH position slides toward the camera
+          // and wraps within the band so it recycles. Perspective then makes near
+          // particles stream past faster than far ones (a parallax fly-over).
           const zEff = TERRAIN_Z_MIN +
             ((((tzu + depthGlide - TERRAIN_Z_MIN) % TERRAIN_Z_SPAN) + TERRAIN_Z_SPAN) % TERRAIN_Z_SPAN);
-          // Fade particles in/out within a margin of either band edge so the
-          // recycle (near edge → far edge) is invisible.
+          // Height/reshape: sample the noise at the particle's CONTINUOUS world
+          // position (zEff − glide), NOT its fixed grid cell. This makes the whole
+          // band one unbroken height field: a particle that wraps from the near
+          // edge back to the far edge samples the terrain already present there, so
+          // the surface stays seamless across the recycle — no moving tile seam.
+          // The `flow` term still morphs the dunes in place, independent of glide.
+          const nv  = snoise2D(txu * TERRAIN_FREQ + flow, (zEff - depthGlide) * TERRAIN_FREQ - flow * 0.35);
+          heightN   = nv * 0.5 + 0.5;
+          const tyu = nv * TERRAIN_AMP;
+          // Fade particles to nothing within a margin of either band edge so the
+          // density blip at the wrap instant is invisible (smoothstep ramp).
           const edgeDist = Math.min(zEff - TERRAIN_Z_MIN, TERRAIN_Z_MIN + TERRAIN_Z_SPAN - zEff);
-          recycleFade = Math.min(1, edgeDist / TERRAIN_GLIDE_FADE);
+          const fadeT = Math.min(1, edgeDist / TERRAIN_GLIDE_FADE);
+          recycleFade = fadeT * fadeT * (3 - 2 * fadeT);
           // Sunk below the camera eye line with a gentle far-edge tilt, the
           // plane reads as terrain seen from above — an aerial perspective
           // without moving the shared camera out from under the other phases.
