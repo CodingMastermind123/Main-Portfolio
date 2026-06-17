@@ -24,28 +24,24 @@ const GALAXY_X = 1.7;   // world-X offset of the galaxy disc → sits in the rig
                         // the disc morphs into the centered nav sphere.
 
 // Always-present ambient terrain — a persistent grid-based particle heightmap
-// living behind every section. The aerial perspective comes from sinking the
-// near-horizontal plane well below the camera's eye line: near rows spread
-// under the viewer, far rows compress toward a horizon, with a slight tilt
-// lifting the far edge. Formed-ness is driven by scroll velocity, not section
-// boundaries — fast scroll forms it, settling disperses it back to ambient.
+// living behind every section below the hero. The aerial perspective comes
+// from sinking the near-horizontal plane well below the camera's eye line and
+// tilting the far edge up. The heightmap is ALWAYS fully formed at a constant
+// ambient brightness — it never disperses or hides. Its shape stays frozen
+// while the user is settled and only reshapes while actively scrolling: the
+// noise sampling offset is advanced directly by scroll distance (scrolling
+// down advances it, up reverses), never by a continuous time-based drift.
 const TERRAIN_W      = 5.6;  // grid half-width (x, world units)
 const TERRAIN_D      = 2.5;  // grid half-depth (z, world units)
 const TERRAIN_ZOFF   = -1.0; // push grid center away from the camera
-const TERRAIN_AMP    = 0.6;  // noise heightmap amplitude
-const TERRAIN_FREQ   = 0.5;  // noise sampling frequency (per world unit)
+const TERRAIN_AMP    = 0.5;  // noise heightmap amplitude — gentle, not spiky
+const TERRAIN_FREQ   = 0.26; // low frequency → a few broad rolling dunes, not
+                             // many small bumps (which read as static noise)
 const TERRAIN_TILT   = 0.22; // gentle tilt raising the far edge (radians)
 const TERRAIN_Y      = -1.6; // sink plane below the camera eye line → aerial view
-const TERRAIN_BASE   = 0.16; // faint always-present terrain when fully settled
-const TERRAIN_VEL_GAIN   = 0.58; // extra formation from fast scrolling
-const TERRAIN_BOUND_GAIN = 0.18; // extra formation/brightness near section edges
-const TERRAIN_MAX    = 0.84; // cap on formed-ness — never a full "moment"
-const TERRAIN_SCROLL_K   = 0.00095; // noise-offset flow per scrolled pixel
-const TERRAIN_IDLE_DRIFT = 0.05; // slow constant noise drift so it's alive when idle
-const VEL_FULL       = 2.4;  // px/ms scroll speed mapped to full velocity (=1)
-const VEL_DECAY      = 2.6;  // per-second decay of the velocity proxy toward 0
+const TERRAIN_SCROLL_K = 0.0013; // noise-offset flow advanced per scrolled pixel
 const AMBIENT_ALPHA  = 0.16; // resting site-wide field alpha multiplier
-const TERRAIN_ALPHA  = 0.62; // alpha multiplier at terrain peaks, full formation
+const TERRAIN_ALPHA  = 0.62; // alpha multiplier at terrain peaks
 const HIT_RADIUS = 36;  // px — 2D screen-space hover radius around nav nodes
 const LOCK_MS  = 700;  // scroll pause (ms) when the sphere lands — 600–800 range
 
@@ -431,20 +427,12 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Smoothed toward postTarget each frame in the animate loop.
     let post       = 0;
     let postTarget = 0;
-    // terrain: 0 = ambient dispersed, 1 = fully formed heightmap. Driven by
-    // scroll velocity + section-edge proximity (not boundary triggers), so it
-    // forms while scrolling and disperses back toward ambient when settled.
+    // terrain: eases to 1 and holds — the heightmap is always fully formed.
+    // Kept as a smoothed value only so it ramps in cleanly on first load.
     let terrain    = 0;
-    // Velocity proxy (0..1), bumped by the scroll handler, decays each frame.
-    let velRaw     = 0;
-    // Noise-sampling flow. scrollFlow advances with scroll distance (sign =
-    // direction, so scrolling up reverses); idleFlow is a slow constant creep
-    // so the dunes stay subtly alive when the user is settled.
+    // Noise-sampling flow. Advanced ONLY by scroll distance (sign = direction,
+    // so scrolling up reverses). Constant between scroll events → frozen shape.
     let scrollFlow = 0;
-    let idleFlow   = 0;
-    // Section-edge proximity pulse (0..1), recomputed every few frames.
-    let boundaryPulse = 0;
-    let frame      = 0;
     // Whether aSizeArr held terrain-scaled values last frame (needs restore)
     let sizesWereScaled = false;
 
@@ -453,24 +441,13 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // flow direction (scrolling down advances it, up reverses). No per-section
     // triggers — the terrain is a persistent layer, not a boundary event.
     let lastScrollY = window.scrollY || window.pageYOffset || 0;
-    let lastScrollT = performance.now();
     const onScroll = () => {
-      const y   = window.scrollY || window.pageYOffset || 0;
-      const now = performance.now();
-      const dy  = y - lastScrollY;
-      const dt  = Math.max(8, now - lastScrollT);
-      const v   = Math.abs(dy) / dt;                 // px per ms
-      velRaw     = Math.min(1, Math.max(velRaw, v / VEL_FULL));
-      scrollFlow += dy * TERRAIN_SCROLL_K;           // sign → flow direction
+      const y  = window.scrollY || window.pageYOffset || 0;
+      const dy = y - lastScrollY;
+      scrollFlow += dy * TERRAIN_SCROLL_K;           // sign → reshape direction
       lastScrollY = y;
-      lastScrollT = now;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Section elements for the edge-proximity brightness pulse.
-    const sectionEls = ['about', 'skills', 'projects', 'achievements', 'contact']
-      .map((id) => document.getElementById(id))
-      .filter(Boolean);
 
     // ── Completion scroll-lock ────────────────────────────────────────────
     // When the sphere is essentially settled (progress > 0.97) we briefly
@@ -562,35 +539,15 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         post += (postTarget - post) * Math.min(1, delta * 2.5);
       }
 
-      // Velocity proxy decays toward 0 between scroll events → the terrain
-      // disperses back toward ambient when the user settles.
-      velRaw *= Math.exp(-delta * VEL_DECAY);
+      // The heightmap is always fully formed — terrain eases to 1 and holds,
+      // so the dunes are a constant presence rather than a scroll-triggered
+      // moment that disperses back to scattered ambient when the user settles.
+      terrain += (1 - terrain) * Math.min(1, delta * 3);
 
-      // Section-edge proximity pulse (throttled to every 4th frame): the
-      // terrain firms up / brightens as a section boundary crosses mid-
-      // viewport. Only matters once the field phase is showing.
-      if ((frame++ & 3) === 0 && post > 0.05 && sectionEls.length) {
-        let nearest = 1;
-        for (let s = 0; s < sectionEls.length; s++) {
-          const top = sectionEls[s].getBoundingClientRect().top;
-          const d   = Math.abs(top - h * 0.5) / h;
-          if (d < nearest) nearest = d;
-        }
-        boundaryPulse = Math.max(0, 1 - nearest * 3.5);
-      }
-
-      // Terrain formed-ness: faint always-present base + scroll velocity +
-      // boundary pulse, capped so it stays a background layer, never a moment.
-      const terrainTarget = Math.min(
-        TERRAIN_MAX,
-        TERRAIN_BASE + velRaw * TERRAIN_VEL_GAIN + boundaryPulse * TERRAIN_BOUND_GAIN
-      );
-      terrain += (terrainTarget - terrain) * Math.min(1, delta * 3);
-
-      // Noise flow: scroll distance advances/reverses it; a slow idle creep
-      // keeps the dunes subtly alive when the user is settled.
-      idleFlow += delta * TERRAIN_IDLE_DRIFT;
-      const flow = scrollFlow + idleFlow;
+      // Noise flow is advanced ONLY by scroll distance (see onScroll). Between
+      // scroll events scrollFlow is constant, so the dune shape freezes exactly
+      // where it is — no continuous idle drift, no snap back to a rest shape.
+      const flow = scrollFlow;
 
       // Sample terrain noise only in the field phase (skips hero/sphere).
       const terrainActive = post > 0.01 && terrain > 0.001;
@@ -691,7 +648,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         const morphA = baseAlpha[i] * tw * (isDispersal ? (1 - eased) : 1);
         const fieldBase = baseAlpha[i] + (0.95 - baseAlpha[i]) * terrainEase;
         const fieldA = fieldBase * tw *
-          (AMBIENT_ALPHA + (TERRAIN_ALPHA - AMBIENT_ALPHA) * terrainEase * (0.15 + 0.85 * heightN));
+          (AMBIENT_ALPHA + (TERRAIN_ALPHA - AMBIENT_ALPHA) * terrainEase * (0.55 + 0.45 * heightN));
         aAlphaArr[i] = morphA + (fieldA - morphA) * post;
 
         // Size: peaks swell slightly, valleys shrink; restored to base when
