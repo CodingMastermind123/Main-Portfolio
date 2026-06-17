@@ -39,7 +39,16 @@ const TERRAIN_FREQ   = 0.26; // low frequency → a few broad rolling dunes, not
                              // many small bumps (which read as static noise)
 const TERRAIN_TILT   = 0.22; // gentle tilt raising the far edge (radians)
 const TERRAIN_Y      = -1.6; // sink plane below the camera eye line → aerial view
-const TERRAIN_SCROLL_K = 0.0013; // noise-offset flow advanced per scrolled pixel
+const TERRAIN_SCROLL_K = 0.0013; // reshape noise-offset advanced per scrolled pixel
+const TERRAIN_GLIDE_K = 0.005; // forward-glide: world-depth translation per scrolled
+                               // pixel. The grid slides toward the camera and wraps,
+                               // so perspective makes near particles stream past
+                               // faster than far ones — a parallax fly-over illusion
+                               // that is independent of the height-reshape above.
+const TERRAIN_Z_MIN  = -TERRAIN_D + TERRAIN_ZOFF; // near... far depth band edges that
+const TERRAIN_Z_SPAN = 2 * TERRAIN_D;             // the glide wraps particles within
+const TERRAIN_GLIDE_FADE = 0.55; // depth-band margin over which recycled particles
+                                 // fade in/out so the wrap seam stays invisible
 const AMBIENT_ALPHA  = 0.16; // resting site-wide field alpha multiplier
 const TERRAIN_ALPHA  = 0.62; // alpha multiplier at terrain peaks
 const HIT_RADIUS = 36;  // px — 2D screen-space hover radius around nav nodes
@@ -433,6 +442,12 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Noise-sampling flow. Advanced ONLY by scroll distance (sign = direction,
     // so scrolling up reverses). Constant between scroll events → frozen shape.
     let scrollFlow = 0;
+    // Forward-glide: a world-depth translation of the terrain grid (NOT the noise
+    // input — height/reshape is untouched). The grid slides toward the camera and
+    // wraps, so perspective makes near particles stream past faster than far ones.
+    // Advanced ONLY by scroll distance, so its rate scales with scroll velocity and
+    // it freezes the instant scrolling stops (same mechanism as scrollFlow).
+    let depthGlide = 0;
     // Whether aSizeArr held terrain-scaled values last frame (needs restore)
     let sizesWereScaled = false;
 
@@ -445,6 +460,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       const y  = window.scrollY || window.pageYOffset || 0;
       const dy = y - lastScrollY;
       scrollFlow += dy * TERRAIN_SCROLL_K;           // sign → reshape direction
+      depthGlide += dy * TERRAIN_GLIDE_K;            // sign → forward / backward glide
       lastScrollY = y;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -612,23 +628,35 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         let fx = ax, fy = ay, fz = az;
         let terrainEase = 0;
         let heightN     = 0.5; // normalized terrain height (0 valley → 1 peak)
+        let recycleFade = 1;   // edge fade so the glide's wrap seam stays hidden
         if (!isDispersal && terrainActive) {
           const tStagger = normR * 0.3;
           const tp = Math.max(0, Math.min(1, (terrain - tStagger) / (1 - tStagger)));
           terrainEase = tp * tp * (3 - 2 * tp);
           const txu = gridX[i];
           const tzu = gridZ[i];
-          // Offsetting the sampling coords (not the grid) morphs the dunes
-          // in place — peaks rise and valleys form as the scroll-driven flow
-          // drifts (forward on scroll-down, reversed on scroll-up).
+          // Height / reshape: sampled at the FIXED grid cell (+ flow), independent
+          // of the forward-glide below. Offsetting the sampling coords (not the
+          // grid) morphs the dunes in place — peaks rise and valleys form as the
+          // scroll-driven flow drifts (forward on scroll-down, reversed on up).
           const nv  = snoise2D(txu * TERRAIN_FREQ + flow, tzu * TERRAIN_FREQ - flow * 0.35);
           heightN   = nv * 0.5 + 0.5;
           const tyu = nv * TERRAIN_AMP;
+          // Forward-glide: translate the particle's DEPTH (not its noise input)
+          // toward the camera and wrap it within the terrain band so it recycles.
+          // Perspective then makes near particles stream past faster than far ones
+          // — a parallax fly-over that runs independently of the height reshape.
+          const zEff = TERRAIN_Z_MIN +
+            ((((tzu + depthGlide - TERRAIN_Z_MIN) % TERRAIN_Z_SPAN) + TERRAIN_Z_SPAN) % TERRAIN_Z_SPAN);
+          // Fade particles in/out within a margin of either band edge so the
+          // recycle (near edge → far edge) is invisible.
+          const edgeDist = Math.min(zEff - TERRAIN_Z_MIN, TERRAIN_Z_MIN + TERRAIN_Z_SPAN - zEff);
+          recycleFade = Math.min(1, edgeDist / TERRAIN_GLIDE_FADE);
           // Sunk below the camera eye line with a gentle far-edge tilt, the
           // plane reads as terrain seen from above — an aerial perspective
           // without moving the shared camera out from under the other phases.
-          const ty = tyu * T_COS - tzu * T_SIN + TERRAIN_Y;
-          const tz = tyu * T_SIN + tzu * T_COS;
+          const ty = tyu * T_COS - zEff * T_SIN + TERRAIN_Y;
+          const tz = tyu * T_SIN + zEff * T_COS;
           fx = ax + (txu - ax) * terrainEase;
           fy = ay + (ty  - ay) * terrainEase;
           fz = az + (tz  - az) * terrainEase;
@@ -647,7 +675,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         const tw     = 0.85 + 0.15 * Math.sin(elapsed * twinkleFreq[i] + twinklePhase[i]);
         const morphA = baseAlpha[i] * tw * (isDispersal ? (1 - eased) : 1);
         const fieldBase = baseAlpha[i] + (0.95 - baseAlpha[i]) * terrainEase;
-        const fieldA = fieldBase * tw *
+        const fieldA = fieldBase * tw * recycleFade *
           (AMBIENT_ALPHA + (TERRAIN_ALPHA - AMBIENT_ALPHA) * terrainEase * (0.55 + 0.45 * heightN));
         aAlphaArr[i] = morphA + (fieldA - morphA) * post;
 
