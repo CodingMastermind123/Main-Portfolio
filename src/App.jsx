@@ -1,9 +1,10 @@
 // ════════════════ 3.1 IMPORTS ════════════════
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { GalaxyScene } from './GalaxyHero.jsx';
+import { StarfieldHero } from './StarfieldHero.jsx';
 import {
   FiGithub, FiLinkedin, FiMail, FiExternalLink, FiDownload,
-  FiSun, FiMoon, FiMenu, FiX, FiSearch,
+  FiMenu, FiX, FiSearch,
   FiArrowRight, FiAward, FiCode, FiLayers, FiZap, FiUser,
   FiActivity, FiBox, FiCoffee,
 } from 'react-icons/fi';
@@ -204,34 +205,12 @@ const COMMAND_ACTIONS = [
   { label: 'Go to Projects',     action: 'scroll',  target: '#projects',     icon: FiLayers },
   { label: 'Go to Achievements', action: 'scroll',  target: '#achievements', icon: FiAward },
   { label: 'Go to Contact',      action: 'scroll',  target: '#contact',      icon: FiMail },
-  { label: 'Toggle Theme',       action: 'theme',   target: null,            icon: FiSun },
   { label: 'Open Resume',        action: 'link',    target: `${import.meta.env.BASE_URL}resume.pdf`,   icon: FiDownload },
   { label: 'Visit GitHub',       action: 'link',    target: 'https://github.com/CodingMastermind123', icon: FiGithub },
   { label: 'Visit LinkedIn',     action: 'link',    target: 'https://www.linkedin.com/in/aamrith', icon: FiLinkedin },
 ];
 
 // ════════════════ 3.3 CUSTOM HOOKS ════════════════
-
-function useDarkMode() {
-  const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem('theme');
-    return stored ? stored === 'dark' : true;
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
-
-  const toggleDarkMode = useCallback(() => setDarkMode(prev => !prev), []);
-  return [darkMode, toggleDarkMode];
-}
 
 function useScrollReveal(delay = 0) {
   const ref = useRef(null);
@@ -567,7 +546,7 @@ function CurrentlyBuildingBadge() {
 // ════════════════ SECTION COMPONENTS ════════════════
 
 // Step 5.1 — Sticky navbar: transparent → frosted glass on scroll, active section highlighting
-function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
+function Navbar({ setMobileMenuOpen }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
 
@@ -640,17 +619,6 @@ function Navbar({ darkMode, toggleDarkMode, setMobileMenuOpen }) {
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
-          {/* Theme toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Toggle theme"
-          >
-            <span style={{ display: 'inline-block', transform: darkMode ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 300ms' }}>
-              {darkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
-            </span>
-          </button>
-
           {/* Resume pill — desktop only */}
           <a
             href={`${import.meta.env.BASE_URL}resume.pdf`}
@@ -2019,7 +1987,7 @@ function ProjectModal({ project, onClose }) {
     </div>
   );
 }
-function CommandPalette({ onClose, toggleDarkMode }) {
+function CommandPalette({ onClose }) {
   const [query, setQuery]     = useState('');
   const [selected, setSelected] = useState(0);
   const inputRef   = useRef(null);
@@ -2036,13 +2004,11 @@ function CommandPalette({ onClose, toggleDarkMode }) {
   const execute = useCallback((action) => {
     if (action.action === 'scroll') {
       document.querySelector(action.target)?.scrollIntoView({ behavior: 'smooth' });
-    } else if (action.action === 'theme') {
-      toggleDarkMode();
     } else if (action.action === 'link') {
       window.open(action.target, '_blank', 'noopener,noreferrer');
     }
     onClose();
-  }, [onClose, toggleDarkMode]);
+  }, [onClose]);
 
   // Auto-focus input, restore previous focus on close
   useEffect(() => {
@@ -2148,7 +2114,6 @@ function EasterEggConfetti() { return null; }
 // ════════════════ 3.5 ROOT APP COMPONENT ════════════════
 
 export default function App() {
-  const [darkMode, toggleDarkMode] = useDarkMode();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -2180,8 +2145,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
       <Navbar
-        darkMode={darkMode}
-        toggleDarkMode={toggleDarkMode}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
       />
@@ -2189,6 +2152,10 @@ export default function App() {
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
+      {/* Deepest background layer — endless starlight tunnel (zIndex 1). The
+          galaxy/terrain canvas below renders at zIndex 2 with alpha so it
+          composites on top of this. */}
+      <StarfieldHero isMobile={isMobile} />
       <GalaxyScene isMobile={isMobile} nameHoveredRef={nameHoveredRef} />
       <main>
         <HeroSection isMobile={isMobile} nameHoveredRef={nameHoveredRef} />
@@ -2211,7 +2178,6 @@ export default function App() {
       {commandPaletteOpen && (
         <CommandPalette
           onClose={() => setCommandPaletteOpen(false)}
-          toggleDarkMode={toggleDarkMode}
         />
       )}
       {easterEggActive && (

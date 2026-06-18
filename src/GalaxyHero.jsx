@@ -306,9 +306,6 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     const twinklePhase = Float32Array.from({ length: N }, () => Math.random() * Math.PI * 2);
     const aAlphaArr    = new Float32Array(N);
 
-    // Name-hover scatter targets
-    const explodeTargR = Float32Array.from({ length: N }, () => 4.5 + Math.random() * 2);
-
     // ── BufferGeometry ────────────────────────────────────────────────────
     const geo     = new THREE.BufferGeometry();
     const posAttr = new THREE.BufferAttribute(positions, 3);
@@ -423,6 +420,16 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     const camTarget = { x: 0, y: 0 };
     const MAX_TILT  = 3 * Math.PI / 180;
 
+    // Cursor-local expansion: particles within CURSOR_RADIUS of the cursor's
+    // position on the galaxy disc get gently nudged outward — a slight local
+    // swell that follows the cursor, replacing the old global name-hover blast.
+    const CURSOR_RADIUS = 1.3;   // disc-plane units (galaxy radius ≈ 3.6)
+    const CURSOR_PUSH   = 0.35;  // max outward displacement — subtle
+    const TILT_COS = Math.cos(TILT_X);
+    const TILT_SIN = Math.sin(TILT_X);
+    const _cursorV   = new THREE.Vector3();
+    const _cursorDir = new THREE.Vector3();
+
     const handleMouseMove = (e) => {
       mouseNorm.x =  (e.clientX / w - 0.5) * 2;
       mouseNorm.y = -(e.clientY / h - 0.5) * 2;
@@ -430,7 +437,6 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     window.addEventListener('mousemove', handleMouseMove);
 
     // ── State ─────────────────────────────────────────────────────────────
-    let explodeProgress = 0;
     let galaxyRotation  = 0;
     // post: 0 = hero/sphere phase, 1 = site-wide ambient field phase.
     // Smoothed toward postTarget each frame in the animate loop.
@@ -575,11 +581,29 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       scene.rotation.y = camTarget.x * (1 - morphP * 0.8);
       scene.rotation.x = camTarget.y * (1 - morphP * 0.8);
 
-      // Name-hover scatter (disappears during morph)
-      const isHovered = nameHoveredRef?.current || false;
-      const explTgt   = isHovered ? 1 : 0;
-      const explRate  = isHovered ? Math.min(delta * 2.5, 1) : Math.min(delta * 1.25, 1);
-      explodeProgress += (explTgt - explodeProgress) * explRate * (1 - morphP);
+      // Cursor-local expansion — find where the cursor sits on the galaxy disc
+      // plane this frame; the per-particle loop nudges nearby particles gently
+      // outward. Fades out as the galaxy morphs into the sphere (1 - morphP).
+      const cursorStrength = (1 - morphP) * CURSOR_PUSH;
+      let cursorOnDisc = false;
+      let cursorU = 0, cursorW = 0;
+      if (cursorStrength > 0.001) {
+        _cursorV.set(mouseNorm.x, mouseNorm.y, 0.5).unproject(camera);
+        _cursorDir.copy(_cursorV).sub(camera.position).normalize();
+        // Intersect tilted disc plane: point (GALAXY_X,0,0), normal (0,cosT,sinT).
+        const denom = _cursorDir.y * TILT_COS + _cursorDir.z * TILT_SIN;
+        if (Math.abs(denom) > 1e-4) {
+          const t = (-camera.position.y * TILT_COS - camera.position.z * TILT_SIN) / denom;
+          if (t > 0 && isFinite(t)) {
+            const hx = camera.position.x + _cursorDir.x * t;
+            const hy = camera.position.y + _cursorDir.y * t;
+            const hz = camera.position.z + _cursorDir.z * t;
+            cursorU = hx - GALAXY_X;                  // untilted disc x
+            cursorW = hz * TILT_COS - hy * TILT_SIN;  // untilted disc z
+            cursorOnDisc = true;
+          }
+        }
+      }
 
       // Galaxy slow rotation (stops during morph)
       galaxyRotation += delta * 0.04 * (1 - morphP);
@@ -588,12 +612,27 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
 
       for (let i = 0; i < N; i++) {
         const angle = armAngles[i] + galaxyRotation;
-        const r     = radii[i] * (1 + explodeProgress * ((explodeTargR[i] / (radii[i] || 0.01)) - 1));
+        const r     = radii[i];
 
         // Untilted galaxy plane position
-        const ux = Math.cos(angle) * r + scatterX[i];
+        let ux = Math.cos(angle) * r + scatterX[i];
         const uy = scatterY[i];
-        const uz = Math.sin(angle) * r + scatterZ[i];
+        let uz = Math.sin(angle) * r + scatterZ[i];
+
+        // Slight local expansion: particles within CURSOR_RADIUS of the cursor
+        // are pushed radially away from it (in the disc plane), the push
+        // falling off smoothly to zero at the edge.
+        if (cursorOnDisc) {
+          const ddx = ux - cursorU;
+          const ddz = uz - cursorW;
+          const dlen = Math.sqrt(ddx * ddx + ddz * ddz);
+          if (dlen < CURSOR_RADIUS) {
+            const f    = 1 - dlen / CURSOR_RADIUS;   // 1 at center → 0 at edge
+            const inv  = cursorStrength * f * f / (dlen + 1e-4);
+            ux += ddx * inv;
+            uz += ddz * inv;
+          }
+        }
 
         // Tilt galaxy disc toward camera, offset into the right half of the
         // viewport. The X offset rides on gx, so the morph lerp below carries
@@ -844,17 +883,20 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
   return (
     <>
       {/* Fixed Three.js canvas — full-viewport background for the whole site.
-          zIndex 1 paints it above section background colors (sections are
+          zIndex 2 paints it above section background colors (sections are
           position:relative with z-index:auto) but below every section's
           `relative z-10` content wrapper, so ambient particles sit behind
-          text without being buried under opaque section backgrounds. */}
+          text without being buried under opaque section backgrounds. Sits one
+          level above the StarfieldHero canvas (zIndex 1); this canvas is
+          alpha:true so the starlight tunnel shows through behind the galaxy
+          and terrain particles. */}
       <canvas
         ref={canvasRef}
         style={{
           position: 'fixed',
           top: 0, left: 0,
           width: '100vw', height: '100vh',
-          zIndex: 1,
+          zIndex: 2,
           pointerEvents: 'none',
           display: 'block',
         }}
