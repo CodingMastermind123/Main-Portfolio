@@ -32,7 +32,9 @@ const GALAXY_X = 1.7;   // world-X offset of the galaxy disc → sits in the rig
 // noise sampling offset is advanced directly by scroll distance (scrolling
 // down advances it, up reverses), never by a continuous time-based drift.
 const TERRAIN_W      = 5.6;  // grid half-width (x, world units)
-const TERRAIN_D      = 2.5;  // grid half-depth (z, world units)
+const TERRAIN_D      = 3.6;  // grid half-depth (z, world units). Deliberately wider
+                             // than the visible viewport depth so the recycle/wrap and
+                             // its alpha fade both happen OUTSIDE the on-screen region.
 const TERRAIN_ZOFF   = -1.0; // push grid center away from the camera
 const TERRAIN_AMP    = 0.5;  // noise heightmap amplitude — gentle, not spiky
 const TERRAIN_FREQ   = 0.26; // low frequency → a few broad rolling dunes, not
@@ -47,8 +49,12 @@ const TERRAIN_GLIDE_K = 0.005; // forward-glide: world-depth translation per scr
                                // that is independent of the height-reshape above.
 const TERRAIN_Z_MIN  = -TERRAIN_D + TERRAIN_ZOFF; // near... far depth band edges that
 const TERRAIN_Z_SPAN = 2 * TERRAIN_D;             // the glide wraps particles within
-const TERRAIN_GLIDE_FADE = 0.55; // depth-band margin over which recycled particles
-                                 // fade in/out so the wrap seam stays invisible
+const TERRAIN_GLIDE_FADE = 1.5;  // depth-band margin over which recycled particles
+                                 // fade fully out → in. Long (≫ a couple frames) so a
+                                 // particle is completely transparent before it wraps
+                                 // and only returns to full alpha well away from the
+                                 // edge. With the band wider than the viewport, this
+                                 // whole ramp lives off-screen → the wrap is unseeable.
 const AMBIENT_ALPHA  = 0.16; // resting site-wide field alpha multiplier
 const TERRAIN_ALPHA  = 0.62; // alpha multiplier at terrain peaks
 const HIT_RADIUS = 36;  // px — 2D screen-space hover radius around nav nodes
@@ -198,11 +204,19 @@ function buildTerrainData() {
   const gridZ = new Float32Array(N);
   const cols  = Math.ceil(Math.sqrt(N * (TERRAIN_W / TERRAIN_D)));
   const rows  = Math.ceil(N / cols);
+  // Depth (z) is intentionally NOT row-quantized. If every particle in a row shared
+  // one z, the whole row would cross the glide-wrap boundary at the same scroll
+  // position → a visible "wave" of ~`cols` particles recycling in lockstep. Instead
+  // each particle gets a continuous z: its row base plus a deterministic per-particle
+  // offset spanning ~1.5 row-pitches, so adjacent rows overlap into one continuum and
+  // no two particles wrap at the same scroll position (strictly staggered recycle).
+  const rowPitch = (2 * TERRAIN_D) / Math.max(1, rows - 1);
   for (let i = 0; i < N; i++) {
     const c = i % cols;
     const r = (i / cols) | 0;
     gridX[i] = (c / (cols - 1) * 2 - 1) * TERRAIN_W + (((i * 0.61803) % 1) - 0.5) * 0.03;
-    gridZ[i] = (r / (rows - 1) * 2 - 1) * TERRAIN_D + TERRAIN_ZOFF + (((i * 0.7548) % 1) - 0.5) * 0.03;
+    gridZ[i] = (r / (rows - 1) * 2 - 1) * TERRAIN_D + TERRAIN_ZOFF
+             + (((i * 0.7548) % 1) - 0.5) * rowPitch * 1.5;
   }
   return { gridX, gridZ };
 }
@@ -472,26 +486,69 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     window.addEventListener('scroll', onScroll, { passive: true });
 
     // ── Completion scroll-lock ────────────────────────────────────────────
-    // When the sphere is essentially settled (progress > 0.97) we briefly
-    // swallow wheel/touch input so it visibly "lands" before scroll resumes.
-    // Fires once per entry; hasLocked resets only when the user scrolls fully
-    // back out of the sphere section (onLeaveBack), so end-of-pin jitter near
-    // progress≈1 can't re-trigger it.
-    let hasLocked = false;
+    // When the morph first reaches the formed sphere, hold the page still for
+    // LOCK_MS so it visibly "lands" before scroll resumes. Two invariants make
+    // this clean where the old version burst or stalled:
+    //   • the hold happens at a TRUE progress === 1 (fully formed), never at the
+    //     0.97 trigger point mid-morph; and
+    //   • the page is parked exactly at the pin's end, so releasing has no
+    //     leftover morph to rush through (which read as a "burst").
+    // We reach 1.0 by smoothly scrolling to the pin end through the normal scrub
+    // path — so morphProgress lands on 1.0 with NO override and nothing snaps
+    // back on release.
+    let hasLocked = false;   // fired this entry? (re-armed on scroll back out)
+    let isLocking = false;   // mid lock sequence (settle → hold)
     let lockTimer = 0;
+
+    // Block EVERY scroll path: wheel + touch (trackpad/finger momentum) and the
+    // scroll keys. preventDefault needs { passive:false }; overflow:hidden is the
+    // belt-and-suspenders freeze applied once we're parked and formed.
     const blockScrollEvent = (e) => e.preventDefault();
-    const engageLock = () => {
-      window.addEventListener('wheel', blockScrollEvent, { passive: false });
+    const SCROLL_KEYS = new Set(
+      [' ', 'Spacebar', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End']);
+    const blockScrollKey = (e) => { if (SCROLL_KEYS.has(e.key)) e.preventDefault(); };
+    const addInputBlock = () => {
+      window.addEventListener('wheel',     blockScrollEvent, { passive: false });
       window.addEventListener('touchmove', blockScrollEvent, { passive: false });
+      window.addEventListener('keydown',   blockScrollKey,   { passive: false });
     };
-    // Smooth release: drop the block on the next frame so the wheel event in
-    // flight at unlock isn't consumed mid-handler (which reads as an abrupt
-    // jump) — scroll resumes from rest instead of bursting.
+    const removeInputBlock = () => {
+      window.removeEventListener('wheel',     blockScrollEvent);
+      window.removeEventListener('touchmove', blockScrollEvent);
+      window.removeEventListener('keydown',   blockScrollKey);
+    };
+
     const releaseLock = () => {
-      requestAnimationFrame(() => {
-        window.removeEventListener('wheel', blockScrollEvent);
-        window.removeEventListener('touchmove', blockScrollEvent);
-      });
+      clearTimeout(lockTimer);
+      lockTimer = 0;
+      document.body.style.overflow = '';   // undo the hard freeze
+      removeInputBlock();
+      isLocking = false;
+    };
+
+    // Block input immediately (a fast flick can't escape), then snap to the pin
+    // end so morphProgress is a TRUE 1.0 — fully formed — and the page is parked
+    // exactly at the completion point, with no leftover morph to rush through on
+    // release (that was the "burst"). `behavior:'instant'` is required because the
+    // page sets `scroll-behavior:smooth` (index.css): an animated scroll here
+    // would stretch over ~1s AND, on a fast flick that overshot past the pin, let
+    // the sphere disperse into the field and back (a flicker). A fast flick can
+    // overshoot in a single frame before this fires; the clamp pulls it straight
+    // back to the formed sphere. Then hard-freeze and hold for exactly LOCK_MS.
+    const engageLock = () => {
+      hasLocked = true;
+      isLocking = true;
+      addInputBlock();
+      window.scrollTo({ top: st.end, behavior: 'instant' });
+      // Hold the SPHERE phase, not the field. st.end is exactly the pin boundary
+      // where onLeave flips post→1 (sphere disperses into the ambient field), and
+      // a fast flick that overshot past it has already triggered that. Pin post to
+      // the formed-sphere phase for the hold; the onLeave guard below keeps it
+      // there while isLocking is set.
+      post = 0;
+      postTarget = 0;
+      document.body.style.overflow = 'hidden';
+      lockTimer = setTimeout(releaseLock, LOCK_MS);
     };
 
     // ── ScrollTrigger ─────────────────────────────────────────────────────
@@ -515,26 +572,31 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         end: '+=180%',
         onUpdate: (self) => {
           morphProgressRef.current = self.progress;
-          // Engage once the sphere is settled (>0.97), not at the exact end
-          // where scrub jitter lives — so the lock catches a clean landing.
-          if (self.progress > 0.97 && !hasLocked) {
-            hasLocked = true;
+          // First forward crossing of 0.97 → run the land-and-hold sequence once.
+          if (self.progress >= 0.97 && !hasLocked) {
             engageLock();
-            clearTimeout(lockTimer);
-            lockTimer = setTimeout(releaseLock, LOCK_MS);
-          } else if (self.progress < 0.5 && hasLocked) {
-            // Genuine scroll back out of the formed-sphere zone (morph undone
-            // past halfway) re-arms the lock. The hero is pinned at top top, so
-            // onLeaveBack can never fire (no scroll space above start) — this
-            // threshold is the reliable "scrolled back out" signal, and being
-            // well below the 0.97 engage point, end-of-pin jitter can't re-arm.
+          } else if (self.progress < 0.5 && hasLocked && !isLocking) {
+            // Re-arm fallback. The hero is pinned at `top top`, so there is no
+            // scroll space above `start` and onLeaveBack cannot fire (GSAP only
+            // fires it when scrolling *past* start, impossible at the page top).
+            // Dropping below the morph's halfway point is the reliable "scrolled
+            // back out" signal; being far below the 0.97 engage point, end-of-pin
+            // scrub jitter can't re-trip it.
             hasLocked = false;
-            clearTimeout(lockTimer);
-            releaseLock();
           }
         },
-        onLeave:     () => { postTarget = 1; },
+        // While the completion lock holds, suppress the field transition so the
+        // formed sphere stays on screen for the full hold (a fast flick fires
+        // onLeave during its overshoot before the lock clamps back).
+        onLeave:     () => { if (!isLocking) postTarget = 1; },
         onEnterBack: () => { postTarget = 0; },
+        onLeaveBack: () => {
+          // Spec's reset signal — honoured for setups where the hero is NOT the
+          // first element (start offset > 0, so this genuinely fires); harmless
+          // where it never fires because the progress<0.5 fallback covers it.
+          hasLocked = false;
+          if (isLocking) releaseLock();
+        },
       });
     }
 
@@ -679,13 +741,17 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
           // particles stream past faster than far ones (a parallax fly-over).
           const zEff = TERRAIN_Z_MIN +
             ((((tzu + depthGlide - TERRAIN_Z_MIN) % TERRAIN_Z_SPAN) + TERRAIN_Z_SPAN) % TERRAIN_Z_SPAN);
-          // Height/reshape: sample the noise at the particle's CONTINUOUS world
-          // position (zEff − glide), NOT its fixed grid cell. This makes the whole
-          // band one unbroken height field: a particle that wraps from the near
-          // edge back to the far edge samples the terrain already present there, so
-          // the surface stays seamless across the recycle — no moving tile seam.
-          // The `flow` term still morphs the dunes in place, independent of glide.
-          const nv  = snoise2D(txu * TERRAIN_FREQ + flow, (zEff - depthGlide) * TERRAIN_FREQ - flow * 0.35);
+          // Height/reshape: sample the noise at the particle's CURRENT band
+          // position `zEff` — the depth it actually occupies right now — NOT its
+          // identity coordinate. This anchors the dune surface to screen-depth: any
+          // particle that arrives at a given (x, zEff) shows the SAME height as the
+          // particle that was there before it. So when one recycles from the near
+          // edge to the far edge it inherits the exact local height already present
+          // there → the surface is one unbroken field with no jump at the wrap.
+          // (Sampling at `zEff − depthGlide` instead pins height to the particle's
+          // fixed cell, so its height jumps by SPAN·FREQ every wrap — that was the
+          // seam.) The `flow` term drifts/reshapes the dunes as the user scrolls.
+          const nv  = snoise2D(txu * TERRAIN_FREQ + flow, zEff * TERRAIN_FREQ - flow * 0.35);
           heightN   = nv * 0.5 + 0.5;
           const tyu = nv * TERRAIN_AMP;
           // Fade particles to nothing within a margin of either band edge so the
@@ -858,8 +924,8 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       st?.kill(true); // revert pin-spacer DOM/styles (StrictMode-safe)
       heroFade?.revert(); // restore hero-content inline opacity/transform
       clearTimeout(lockTimer);
-      window.removeEventListener('wheel', blockScrollEvent);
-      window.removeEventListener('touchmove', blockScrollEvent);
+      removeInputBlock();
+      document.body.style.overflow = '';
       io.disconnect();
       cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
