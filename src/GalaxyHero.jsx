@@ -539,12 +539,17 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       hasLocked = true;
       isLocking = true;
       addInputBlock();
-      window.scrollTo({ top: st.end, behavior: 'instant' });
-      // Hold the SPHERE phase, not the field. st.end is exactly the pin boundary
-      // where onLeave flips post→1 (sphere disperses into the ambient field), and
-      // a fast flick that overshot past it has already triggered that. Pin post to
-      // the formed-sphere phase for the hold; the onLeave guard below keeps it
-      // there while isLocking is set.
+      // Park JUST INSIDE the pin end — not exactly at st.end. st.end is the pin
+      // boundary where onLeave flips post→1 (sphere → ambient field). Parking on
+      // it both shows the field during the hold AND consumes onLeave's one-shot so
+      // it never fires again, leaving the sphere stuck on screen forever. A hair
+      // inside, the morph still reads fully formed, post stays in the sphere phase,
+      // and onLeave is preserved to fire normally when the user later scrolls out.
+      const inside = Math.max(st.start, st.end - Math.max(2, (st.end - st.start) * 0.015));
+      window.scrollTo({ top: inside, behavior: 'instant' });
+      // Snap to the sphere phase in case a fast flick overshot past the pin and
+      // began the field transition before we clamped back inside (onEnterBack then
+      // also sets postTarget=0 — this just avoids a half-dispersed first frame).
       post = 0;
       postTarget = 0;
       document.body.style.overflow = 'hidden';
@@ -585,10 +590,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
             hasLocked = false;
           }
         },
-        // While the completion lock holds, suppress the field transition so the
-        // formed sphere stays on screen for the full hold (a fast flick fires
-        // onLeave during its overshoot before the lock clamps back).
-        onLeave:     () => { if (!isLocking) postTarget = 1; },
+        onLeave:     () => { postTarget = 1; },
         onEnterBack: () => { postTarget = 0; },
         onLeaveBack: () => {
           // Spec's reset signal — honoured for setups where the hero is NOT the
