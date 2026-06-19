@@ -879,15 +879,15 @@ function SkillCard({ skill, delay }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        boxShadow: hovered ? `0 0 18px ${skill.color}55, 0 0 6px ${skill.color}33` : 'none',
-        borderColor: hovered ? skill.color : undefined,
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-        transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
+        borderBottom: '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
+        transition: 'box-shadow 200ms ease, transform 200ms ease',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
-      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 cursor-default"
+      className="hud-corners flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-transparent cursor-default"
     >
-      <Icon size={26} style={{ color: skill.color }} />
-      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 text-center leading-tight font-mono">
+      <Icon size={20} style={{ color: skill.color }} />
+      <span className="text-[10px] font-medium text-gray-400 text-center leading-tight font-mono">
         {skill.name}
       </span>
     </div>
@@ -900,10 +900,11 @@ function SkillCategory({ category, skills, baseDelay }) {
 
   return (
     <div>
-      <div ref={labelRef} className="mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 font-mono">
+      <div ref={labelRef} className="flex items-center gap-3 mb-3">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-indigo-400 font-mono whitespace-nowrap">
           {category}
         </h3>
+        <div className="flex-1 h-px" style={{ background: 'rgba(167, 139, 250, 0.2)' }} />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {skills.map((skill, i) => (
@@ -924,12 +925,15 @@ function LearningCard({ item, started }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        boxShadow: hovered ? '0 0 18px rgba(168,85,247,0.35), 0 0 6px rgba(168,85,247,0.2)' : 'none',
-        borderColor: hovered ? '#a855f7' : undefined,
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
         transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
       }}
-      className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+      className="hud-corners p-4 rounded-lg"
     >
       <div className="flex items-baseline justify-between mb-1">
         <span className="text-sm font-medium text-gray-900 dark:text-white font-mono">{name}</span>
@@ -978,7 +982,7 @@ function CurrentlyLearning() {
   return (
     <div ref={containerRef} className="mt-12">
       {/* Divider */}
-      <div className="border-t border-gray-200 dark:border-gray-700 mb-8" />
+      <div className="mb-8" style={{ borderTop: '1px solid rgba(167, 139, 250, 0.15)' }} />
 
       {/* Label with pulsing dot */}
       <div ref={labelRef} className="flex items-center gap-2 mb-4">
@@ -1003,7 +1007,7 @@ function SkillsSection() {
   const radarRef   = useScrollReveal(150);
 
   return (
-    <section id="skills" className="relative overflow-hidden py-24 bg-white dark:bg-gray-950">
+    <section id="skills" className="relative overflow-hidden py-24" style={{ background: 'rgba(8, 8, 20, 0.75)' }}>
       <FloatingParticles count={80} />
       <div className="relative z-10 max-w-6xl mx-auto px-6">
 
@@ -1182,6 +1186,8 @@ const SkillRadarChart = memo(function SkillRadarChart() {
 });
 // ════════════════ PHASE 8 — PROJECTS ════════════════
 
+const CATEGORY_ABBREV = { ML: 'ML', Hardware: 'HW', Web: 'WEB', Other: 'OTHER' };
+
 function ProjectCard({ project, onExpand, index, pulsing }) {
   const revealRef = useScrollReveal(index * 100);
   const [hovered, setHovered] = useState(false);
@@ -1193,19 +1199,18 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => onExpand(project)}
-      className={`h-72 flex flex-col p-6 rounded-2xl cursor-pointer ${isInProgress ? 'bg-white dark:bg-[#161829]' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800'} ${pulsing ? 'card-pulse-anim' : ''}`}
+      className={`hud-corners flex flex-col p-6 rounded-lg cursor-pointer ${pulsing ? 'card-pulse-anim' : ''}`}
       style={{
         position: 'relative',
-        ...(isInProgress
-          ? {
-              border: '1.5px dashed rgba(168, 85, 247, 0.5)',
-              boxShadow: hovered && !pulsing ? '0 0 18px rgba(168,85,247,0.25), 0 0 6px rgba(168,85,247,0.12)' : 'none',
-            }
-          : {
-              boxShadow: hovered && !pulsing ? '0 0 18px rgba(99,102,241,0.35), 0 0 6px rgba(99,102,241,0.2)' : 'none',
-              borderColor: hovered && !pulsing ? '#6366f1' : undefined,
-            }
-        ),
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: isInProgress
+          ? '1.5px dashed rgba(167, 139, 250, 0.3)'
+          : hovered && !pulsing
+            ? '1px solid rgba(167, 139, 250, 0.4)'
+            : '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered && !pulsing ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
         transform: hovered && !pulsing ? 'translateY(-3px)' : undefined,
         transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
       }}
@@ -1225,33 +1230,28 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
       )}
       <div className="flex items-start justify-between mb-3">
         {isInProgress ? (
-          <span className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 font-mono">
+          <span className="flex items-center gap-1.5 text-xs font-semibold font-mono">
             <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
             <span style={{ color: '#22c55e' }}>In Progress</span>
           </span>
         ) : (
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-mono">
-            {project.category}
+          <span className="text-xs font-semibold font-mono" style={{ color: 'rgba(167, 139, 250, 0.7)' }}>
+            [{CATEGORY_ABBREV[project.category] || project.category}]
           </span>
         )}
-        <FiCode className="text-gray-400" size={18} />
+        <span className="text-sm font-mono" style={{ color: 'rgba(167, 139, 250, 0.25)' }}>
+          {String(index + 1).padStart(2, '0')}
+        </span>
       </div>
       <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
         {project.title}
       </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400 flex-1 leading-relaxed">
+      <p className="text-sm text-gray-400 flex-1 leading-relaxed">
         {project.summary}
       </p>
-      <div className="flex flex-wrap gap-1.5 mt-4">
-        {project.stack.slice(0, 4).map((tech) => (
-          <span
-            key={tech}
-            className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono"
-          >
-            {tech}
-          </span>
-        ))}
-      </div>
+      <p className="text-xs font-mono mt-3" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
+        {project.stack.slice(0, 4).join(', ')}
+      </p>
       {isInProgress && (
         <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Repo coming soon</p>
       )}
@@ -1464,7 +1464,7 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
   useEffect(() => () => clearTimeout(expandTimerRef.current), []);
 
   return (
-    <section id="projects" className="relative overflow-hidden py-24 px-6 bg-white dark:bg-gray-950">
+    <section id="projects" className="relative overflow-hidden py-24 px-6" style={{ background: 'rgba(8, 8, 20, 0.75)' }}>
       <FloatingParticles count={80} />
       <div className="relative z-10 max-w-6xl mx-auto">
       {/* Heading */}
@@ -1548,11 +1548,14 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
+const ACHIEVEMENT_TYPE = {
+  eagle: 'AWARD', award: 'AWARD', merit: 'RECOGNITION',
+  ap: 'RECOGNITION', python: 'CERTIFICATION', java: 'CERTIFICATION',
+};
+
 function AchievementCard({ achievement, index }) {
   const revealRef = useScrollReveal(index * 150);
   const [hovered, setHovered] = useState(false);
-  const Icon = ACHIEVEMENT_ICON_MAP[achievement.icon] || FiAward;
-  const rgb = hexToRgb(achievement.color);
 
   return (
     <div
@@ -1560,36 +1563,31 @@ function AchievementCard({ achievement, index }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
-        boxShadow: hovered
-          ? `0 16px 40px rgba(${rgb},0.3)`
-          : '0 2px 12px rgba(0,0,0,0.15)',
-        borderColor: hovered ? `rgba(${rgb},0.4)` : 'transparent',
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease',
       }}
-      className="flex flex-col items-center text-center p-8 rounded-2xl border bg-white dark:bg-gray-900 cursor-default"
+      className="hud-corners flex flex-col items-start text-left p-6 rounded-lg cursor-default"
     >
-      <div
-        style={{
-          background: `rgba(${rgb},0.15)`,
-          border: `2px solid rgba(${rgb},0.35)`,
-        }}
-        className="flex items-center justify-center w-16 h-16 rounded-full mb-5"
-      >
-        <Icon style={{ color: achievement.color }} className="w-8 h-8" />
-      </div>
+      <span className="text-[10px] font-bold uppercase tracking-widest font-mono mb-4" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
+        [{ACHIEVEMENT_TYPE[achievement.icon] || 'AWARD'}]
+      </span>
       <h3
-        className="text-lg font-bold text-gray-900 dark:text-white mb-3"
+        className="text-lg font-bold text-white mb-3"
         style={{ fontFamily: 'var(--font-display)' }}
       >
         {achievement.title}
       </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed flex-1">
+      <p className="text-sm text-gray-400 leading-relaxed flex-1">
         {achievement.description}
       </p>
-      <div className="mt-5 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono">
+      <p className="mt-4 text-xs font-mono" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
         {achievement.chip}
-      </div>
+      </p>
     </div>
   );
 }
@@ -1598,7 +1596,7 @@ function AchievementsSection() {
   const headingRef = useScrollReveal(0);
 
   return (
-    <section id="achievements" className="relative overflow-hidden py-24 px-6 bg-gray-50 dark:bg-gray-950">
+    <section id="achievements" className="relative overflow-hidden py-24 px-6" style={{ background: 'rgba(8, 8, 20, 0.75)' }}>
       <FloatingParticles count={80} />
       <div className="relative z-10 max-w-6xl mx-auto">
         <div ref={headingRef} className="text-center mb-16">
