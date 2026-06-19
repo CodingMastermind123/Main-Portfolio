@@ -761,11 +761,10 @@ function HeroSection({ isMobile, nameHoveredRef }) {
 // Phase 6 — About section: two-column layout, bio, social links, animated stat chips
 function AboutSection() {
   const headingRef  = useScrollReveal(0);
-  const photoRef    = useScrollReveal(100);
   const bioRef      = useScrollReveal(200);
 
   return (
-    <section id="about" className="relative overflow-hidden py-24 bg-white dark:bg-gray-950">
+    <section id="about" className="relative overflow-hidden pt-8 pb-24 -mt-10 bg-white dark:bg-gray-950">
       <FloatingParticles count={80} />
       <div className="relative z-10 max-w-6xl mx-auto px-6">
 
@@ -780,57 +779,38 @@ function AboutSection() {
           <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
         </div>
 
-        {/* Step 6.1 — Two-column grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        {/* Step 6.1 — Centered bio + social links */}
+        <div ref={bioRef} className="max-w-2xl mx-auto text-center space-y-6">
+          {/* Step 6.2 — Bio heading */}
+          <h3
+            className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Hi, I'm Amrith!
+          </h3>
 
-          {/* Left — profile photo placeholder with gradient border */}
-          <div ref={photoRef} className="flex justify-center">
-            <div className="relative group">
-              {/* Gradient ring */}
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-white dark:border-gray-900 transition-transform duration-300 group-hover:scale-105">
-                <img src={`${import.meta.env.BASE_URL}profile.jpeg`} alt="Amrith Akshintala" className="w-full h-full object-cover" style={{ objectPosition: 'center 18%' }} />
-              </div>
-            </div>
-          </div>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+            Computer Engineering Honors student at Texas A&M (Class of 2029), building at the intersection of machine learning, embedded systems, and web development. I care about the full stack — from hardware design to deployed product — and about building things that actually matter.
+          </p>
 
-          {/* Right — bio + social links */}
-          <div ref={bioRef} className="space-y-6">
-            {/* Step 6.2 — Bio heading */}
-            <h3
-              className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Hi, I'm Amrith!
-            </h3>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+            Eagle Scout. Tennis player. Perpetual tinkerer.
+          </p>
 
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Howdy! I'm Amrith, a Computer Engineering Honors student at Texas A&M, and I love building things that actually work. Whether that's an ML model, a microcontroller project, or a web app, I care about the full stack, not just one piece of it. I want what I build to genuinely matter to people and make a real difference.
-            </p>
-
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              I got into engineering because I was always the kind of person who needed to understand how things really work. That curiosity is what keeps me going when a project gets frustrating, and it's pushed me to explore everything from hardware design to machine learning to full stack web apps.
-            </p>
-
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Outside of school I play tennis and basketball, hit the gym, and unwind with video games and good TV. As an Eagle Scout, I also love the outdoors and try to get out for a hike or campout whenever I can.
-            </p>
-
-            {/* Social links */}
-            <div className="flex items-center gap-4 pt-2">
-              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target={href.startsWith('http') ? '_blank' : undefined}
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
-                >
-                  <Icon size={16} /> {label}
-                </a>
-              ))}
-            </div>
+          {/* Social links */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target={href.startsWith('http') ? '_blank' : undefined}
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-indigo-500 hover:text-indigo-600 dark:hover:border-indigo-400 dark:hover:text-indigo-400 transition-colors text-sm font-medium"
+              >
+                <Icon size={16} /> {label}
+              </a>
+            ))}
           </div>
         </div>
 
@@ -1033,8 +1013,8 @@ function SkillsSection() {
             ))}
           </div>
 
-          {/* Radar chart — hidden for now */}
-          {/* <div ref={radarRef} className="flex flex-col items-center gap-4">
+          {/* Radar chart — proficiency overview */}
+          <div ref={radarRef} className="flex flex-col items-center gap-4">
             <h3
               className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -1042,7 +1022,7 @@ function SkillsSection() {
               Proficiency Overview
             </h3>
             <SkillRadarChart />
-          </div> */}
+          </div>
         </div>
 
         {/* Currently Learning subsection */}
