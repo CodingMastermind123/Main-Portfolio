@@ -424,9 +424,19 @@ function CustomCursor() {
     };
     rafRef.current = requestAnimationFrame(loop);
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafRef.current);
+      } else {
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('visibilitychange', handleVisibility);
       document.body.classList.remove('custom-cursor-active');
       cancelAnimationFrame(rafRef.current);
     };
@@ -518,10 +528,20 @@ function FloatingParticles({ count = 45 }) {
     };
     animate();
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+      } else {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     const handleResize = () => setSize();
     window.addEventListener('resize', handleResize);
     return () => {
       cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('resize', handleResize);
     };
   }, [count]);

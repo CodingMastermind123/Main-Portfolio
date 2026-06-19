@@ -910,6 +910,17 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     io.observe(canvas);
     animate();
 
+    // ── Pause when tab is hidden ──────────────────────────────────────────
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+      } else {
+        clock.getDelta();
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     // ── Resize ────────────────────────────────────────────────────────────
     const handleResize = () => {
       w = window.innerWidth;
@@ -930,6 +941,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
       document.body.style.overflow = '';
       io.disconnect();
       cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
