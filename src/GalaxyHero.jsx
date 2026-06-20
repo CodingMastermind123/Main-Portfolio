@@ -6,16 +6,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const N       = 3200;   // total particles
-const DISPERSE = 480;   // ~15% disperse outward instead of joining sphere
+const N       = 5600;   // total particles
+const DISPERSE = 840;   // ~15% disperse outward instead of joining sphere
 const BRANCHES = 5;
-const GALAXY_R = 3.6;   // tighter radius → galaxy reads as a distinct object
+const GALAXY_R = 5.75;  // tighter radius → galaxy reads as a distinct object
 const SPIN     = 2.0;   // spiral twist per unit radius — more winding = clearer arms
 const SCATTER  = 0.13;  // arm thickness as a fraction of radius (azimuthal blur)
 const SCATTER_POW = 3.5;// higher → particles hug the arm spine; dark inter-arm gaps
 const ARM_RADIAL = 2.0; // radial scatter is wider than azimuthal → thin, long arms
 const CORE_POW = 1.35;  // radius concentration toward the bright core (u^CORE_POW)
-const SPHERE_R = 2.0;
+const SPHERE_R = 1.85;
 const TILT_X   = 0.52;  // galaxy disc tilt: low angle from edge-on → reads as a
                         // clear inclined ellipse with depth (sin≈0.5 axis ratio),
                         // not a flat face-on pinwheel
@@ -31,8 +31,8 @@ const GALAXY_X = 1.7;   // world-X offset of the galaxy disc → sits in the rig
 // while the user is settled and only reshapes while actively scrolling: the
 // noise sampling offset is advanced directly by scroll distance (scrolling
 // down advances it, up reverses), never by a continuous time-based drift.
-const TERRAIN_W      = 5.6;  // grid half-width (x, world units)
-const TERRAIN_D      = 3.6;  // grid half-depth (z, world units). Deliberately wider
+const TERRAIN_W      = 8.0;  // grid half-width (x, world units)
+const TERRAIN_D      = 5.2;  // grid half-depth (z, world units). Deliberately wider
                              // than the visible viewport depth so the recycle/wrap and
                              // its alpha fade both happen OUTSIDE the on-screen region.
 const TERRAIN_ZOFF   = -1.0; // push grid center away from the camera
@@ -293,8 +293,8 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     for (let i = 0; i < N; i++) {
       const nr    = Math.min(1, radii[i] / GALAXY_R);
       const core2 = (1 - nr) * (1 - nr);
-      aSizeArr[i]  = (0.015 + core2 * 0.050) * (0.80 + Math.random() * 0.30);
-      baseAlpha[i] = (0.40 + core2 * 0.60)  * (0.85 + Math.random() * 0.15);
+      aSizeArr[i]  = (0.05 + core2 * 0.15) * (0.80 + Math.random() * 0.30);
+      baseAlpha[i] = (0.50 + core2 * 0.50)  * (0.85 + Math.random() * 0.15);
     }
     // Immutable copy — terrain peaks scale aSizeArr per-frame, then restore
     const baseSize = aSizeArr.slice();
@@ -302,8 +302,8 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     // Color: radius-based gradient — bright lavender core → violet outer arms
     const aColorArr   = new Float32Array(N * 3);
     const CORE_COL    = new THREE.Color(0xc4b5fd);
-    const MID_COL     = new THREE.Color(0xa78bfa);
-    const OUTER_COL   = new THREE.Color(0x7c3aed);
+    const MID_COL     = new THREE.Color(0xa855f7);
+    const OUTER_COL   = new THREE.Color(0x6d28d9);
     const tmpCol      = new THREE.Color();
 
     for (let i = 0; i < N; i++) {
@@ -331,6 +331,15 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     geo.setAttribute('aSize',    szAttr);
     geo.setAttribute('aAlpha',   alpAttr);
 
+    const aBrightArr = new Float32Array(N);
+    const baseBright = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      baseBright[i] = baseAlpha[i];
+      aBrightArr[i] = baseBright[i];
+    }
+    const brightAttr = new THREE.BufferAttribute(aBrightArr, 1);
+    geo.setAttribute('aBright', brightAttr);
+
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         uGlobalAlpha: { value: 1.0 },
@@ -341,11 +350,14 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         attribute vec3  aColor;
         attribute float aSize;
         attribute float aAlpha;
+        attribute float aBright;
         varying   vec3  vColor;
         varying   float vAlpha;
+        varying   float vBright;
         void main() {
-          vColor = aColor;
-          vAlpha = aAlpha;
+          vColor  = aColor;
+          vAlpha  = aAlpha;
+          vBright = aBright;
           vec4 mvPos   = modelViewMatrix * vec4(position, 1.0);
           gl_PointSize = aSize * (900.0 / -mvPos.z) * uPixelRatio;
           gl_Position  = projectionMatrix * mvPos;
@@ -355,15 +367,29 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
         uniform float uGlobalAlpha;
         varying vec3  vColor;
         varying float vAlpha;
+        varying float vBright;
         void main() {
-          float d    = length(gl_PointCoord - vec2(0.5));
-          if (d > 0.5) discard;
-          float soft = 1.0 - smoothstep(0.3, 0.5, d);
-          gl_FragColor = vec4(vColor, vAlpha * uGlobalAlpha * soft);
+          float dist = length(gl_PointCoord - vec2(0.5)) * 2.0;
+          if (dist > 1.0) discard;
+          float strength = exp(-dist * 8.0);
+          vec3 hotCore  = mix(vec3(0.97, 0.95, 1.0), vec3(1.0), vBright);
+          vec3 midGlow  = vColor;
+          vec3 outerDim = vec3(0.427, 0.157, 0.851);
+          vec3 col;
+          if (dist < 0.15) {
+            col = mix(hotCore, midGlow, dist / 0.15);
+          } else if (dist < 0.5) {
+            col = mix(midGlow, outerDim, (dist - 0.15) / 0.35);
+          } else {
+            col = outerDim;
+          }
+          float alpha = strength * vAlpha * uGlobalAlpha;
+          gl_FragColor = vec4(col * (strength * 1.15), alpha);
         }
       `,
       transparent: true,
       depthWrite:  false,
+      blending: THREE.AdditiveBlending,
     });
 
     const points = new THREE.Points(geo, mat);
@@ -397,7 +423,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
 
     const nodePositions = getNodePositions(SPHERE_R + 0.22);
     const nodeMeshes    = NODES.map((_, i) => {
-      const g    = new THREE.SphereGeometry(0.07, 8, 8);
+      const g    = new THREE.SphereGeometry(0.065, 8, 8);
       const m    = new THREE.MeshBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: 0 });
       const mesh = new THREE.Mesh(g, m);
       mesh.position.copy(nodePositions[i]);
@@ -788,16 +814,16 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
           (AMBIENT_ALPHA + (TERRAIN_ALPHA - AMBIENT_ALPHA) * terrainEase * (0.55 + 0.45 * heightN));
         aAlphaArr[i] = morphA + (fieldA - morphA) * post;
 
-        // Size: peaks swell slightly, valleys shrink; restored to base when
-        // the terrain disperses (updateSizes stays true one extra frame).
         if (updateSizes) {
-          aSizeArr[i] = baseSize[i] * (1 + 0.7 * (heightN - 0.5) * terrainEase * post);
+          const heightScale = 1 + 1.0 * (heightN - 0.5) * terrainEase * post;
+          aSizeArr[i] = baseSize[i] * heightScale;
+          aBrightArr[i] = baseBright[i] * (1 + 1.2 * (heightN - 0.5) * terrainEase * post);
         }
       }
 
       posAttr.needsUpdate = true;
       alpAttr.needsUpdate = true;
-      if (updateSizes) szAttr.needsUpdate = true;
+      if (updateSizes) { szAttr.needsUpdate = true; brightAttr.needsUpdate = true; }
       sizesWereScaled = terrainActive;
 
       // ── Sphere group rotation (scales in with morphP) ─────────────────

@@ -1,5 +1,5 @@
 // ════════════════ Starfield Close ════════════════
-// A dense volume of bright mint/jade/bone stars wrapping the camera and
+// A dense volume of dim lavender stars wrapping the camera and
 // streaming past as an endless tunnel of starlight. Each star twinkles on its
 // own phase while the whole field slowly barrel-rolls; scrolling surges the
 // drift and dives the camera forward down the tunnel, and the cursor steers the
@@ -26,12 +26,12 @@ const CONFIG = {
   flameColor: '#aee9ff',   // corner-flame color A
   flameColor2: '#c79bff',  // corner-flame color B
   flameAmt: 0.2,           // corner-flame intensity
-  colorA: '#aef6cf',       // star tint A (mint)
-  colorB: '#5fe6a0',       // star tint B (jade)
-  colorC: '#eafff2',       // star tint C (bone)
-  opacity: 2,
+  colorA: '#c4b5fd',       // star tint A (lavender)
+  colorB: '#c4b5fd',       // star tint B (lavender)
+  colorC: '#dcd2ff',       // star tint C (bright lavender, ~10% of stars)
+  opacity: 1.2,
   pointSize: 50,
-  brightness: 1.85,
+  brightness: 1.0,
   drift: 1.5,              // steady tunnel speed (slowed from 2.35)
   twinkle: 1,
   spin: 0.02,              // barrel rotation rate (slowed from 0.03)
@@ -172,8 +172,9 @@ export const StarfieldHero = memo(function StarfieldHero({ isMobile }) {
       positions[i3] = (Math.random() - 0.5) * 24;       // x: box width 24
       positions[i3 + 1] = (Math.random() - 0.5) * 16;   // y: box height 16
       positions[i3 + 2] = (Math.random() - 0.5) * 30;   // z: box depth 30 (== depth)
-      palette[i] = Math.floor(Math.random() * 3);       // 0/1/2 → tint A/B/C
-      bright[i] = 0.7 + Math.random() * 0.6;
+      const r = Math.random();
+      palette[i] = r < 0.1 ? 2 : (r < 0.55 ? 0 : 1);  // ~10% bright lavender, rest dim
+      bright[i] = palette[i] === 2 ? (0.9 + Math.random() * 0.4) : (0.5 + Math.random() * 0.4);
       scales[i] = 0.5 + Math.pow(Math.random(), 1.4) * 2.5;
       phases[i] = Math.random();
     }

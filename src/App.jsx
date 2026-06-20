@@ -34,7 +34,7 @@ const SOCIAL_LINKS = [
 ];
 
 const STATS = [
-  { label: 'Projects',      value: 6,   suffix: '+' },
+  { label: 'Projects',      value: 8,   suffix: '+' },
   { label: 'Hours Coding',  value: 300, suffix: '+' },
   { label: 'Hackathons',    value: 3,   suffix: '' },
   { label: 'Service Hours', value: 100, suffix: '+' },
@@ -813,14 +813,6 @@ function AboutSection() {
 
         {/* Step 6.1 — Centered bio + social links */}
         <div ref={bioRef} className="max-w-2xl mx-auto text-center space-y-6">
-          {/* Step 6.2 — Bio heading */}
-          <h3
-            className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            Hi, I'm Amrith!
-          </h3>
-
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
             Computer Engineering Honors student at Texas A&M (Class of 2029), building at the intersection of machine learning, embedded systems, and web development. I care about the full stack — from hardware design to deployed product — and about building things that actually matter.
           </p>
@@ -861,11 +853,22 @@ function AboutSection() {
 function StatChip({ label, value, suffix, delay }) {
   const { ref, count } = useAnimatedCounter(value);
   const revealRef = useScrollReveal(delay);
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
       ref={(el) => { ref.current = el; revealRef.current = el; }}
-      className="flex flex-col items-center gap-1 p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="hud-corners flex flex-col items-center gap-1 p-5 rounded-lg"
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
+        transition: 'border-color 200ms ease, box-shadow 200ms ease',
+      }}
     >
       <span
         className="text-3xl font-black text-indigo-600 dark:text-indigo-400"
