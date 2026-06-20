@@ -891,12 +891,13 @@ function SkillCard({ skill, delay }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
+        background: 'rgba(167, 139, 250, 0.05)',
         borderBottom: '1px solid rgba(167, 139, 250, 0.15)',
         boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
         transition: 'box-shadow 200ms ease, transform 200ms ease',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
-      className="hud-corners flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-transparent cursor-default"
+      className="skill-chip hud-corners flex flex-col items-center gap-1 py-2 px-2 rounded-lg cursor-default"
     >
       <Icon size={20} style={{ color: skill.color }} />
       <span className="text-[10px] font-medium text-gray-400 text-center leading-tight font-mono">
