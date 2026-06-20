@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { label: 'About',        href: '#about' },
   { label: 'Skills',       href: '#skills' },
   { label: 'Projects',     href: '#projects' },
+  { label: 'Research',     href: '#research' },
   { label: 'Achievements', href: '#achievements' },
   { label: 'Contact',      href: '#contact' },
 ];
@@ -160,6 +161,23 @@ const PROJECTS = [
 
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
 
+const RESEARCH = [
+  {
+    label: 'UNIVERSITY',
+    title: 'Texas A&M Ultrasound Research Laboratory',
+    date: 'Aug 2025 – Apr 2026',
+    description: 'Researched non-invasive methods to measure tumor pressure using ultrasound, contributing to CAD modeling and experimental design.',
+    tags: ['SolidWorks', 'Biomedical Research'],
+  },
+  {
+    label: 'MEDICAL',
+    title: 'Dartmouth-Hitchcock Medical Center',
+    date: 'Jun 2024 – Aug 2024',
+    description: 'Applied computational modeling techniques to biomedical data for disease diagnosis and pathological analysis.',
+    tags: ['Python', 'Computational Modeling'],
+  },
+];
+
 const ACHIEVEMENTS = [
   {
     title: 'Eagle Scout',
@@ -215,6 +233,7 @@ const COMMAND_ACTIONS = [
   { label: 'Go to About',        action: 'scroll',  target: '#about',        icon: FiUser },
   { label: 'Go to Skills',       action: 'scroll',  target: '#skills',       icon: FiCode },
   { label: 'Go to Projects',     action: 'scroll',  target: '#projects',     icon: FiLayers },
+  { label: 'Go to Research',     action: 'scroll',  target: '#research',     icon: FiActivity },
   { label: 'Go to Achievements', action: 'scroll',  target: '#achievements', icon: FiAward },
   { label: 'Go to Contact',      action: 'scroll',  target: '#contact',      icon: FiMail },
   { label: 'Open Resume',        action: 'link',    target: `${import.meta.env.BASE_URL}resume.pdf`,   icon: FiDownload },
@@ -1547,6 +1566,86 @@ function ProjectsSection({ activeFilter, setActiveFilter }) {
   );
 }
 
+// ════════════════ PHASE 8.5 — RESEARCH SECTION ════════════════
+
+function ResearchCard({ research, index }) {
+  const revealRef = useScrollReveal(index * 150);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      ref={revealRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
+        boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease',
+      }}
+      className="hud-corners flex flex-col items-start text-left p-6 rounded-lg cursor-default"
+    >
+      <div className="flex items-center justify-between w-full mb-4">
+        <span className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
+          [{research.label}]
+        </span>
+        <span className="text-[10px] font-mono" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+          {research.date}
+        </span>
+      </div>
+      <h3
+        className="text-lg font-bold text-white mb-3"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {research.title}
+      </h3>
+      <p className="text-sm text-gray-400 leading-relaxed flex-1">
+        {research.description}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {research.tags.map((tag) => (
+          <span key={tag} className="text-xs font-mono" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ResearchSection() {
+  const headingRef = useScrollReveal(0);
+
+  return (
+    <section id="research" className="relative overflow-hidden py-24 px-6" style={{ background: 'rgba(8, 8, 20, 0.75)' }}>
+      <FloatingParticles count={80} />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div ref={headingRef} className="text-center mb-16">
+          <h2
+            className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            Research
+          </h2>
+          <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-mono">
+            Academic & industry research experience.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {RESEARCH.map((research, i) => (
+            <ResearchCard key={research.title} research={research} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ════════════════ PHASE 9 — ACHIEVEMENTS SECTION ════════════════
 const ACHIEVEMENT_ICON_MAP = {
   eagle:  GiFleurDeLys,
@@ -2179,6 +2278,7 @@ export default function App() {
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
         />
+        <ResearchSection />
         <AchievementsSection />
         <ContactSection />
       </main>

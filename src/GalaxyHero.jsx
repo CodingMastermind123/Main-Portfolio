@@ -65,11 +65,12 @@ const T_COS = Math.cos(TERRAIN_TILT);
 const T_SIN = Math.sin(TERRAIN_TILT);
 
 const NODES = [
-  { label: 'About',        descriptor: 'Who I am',         href: '#about' },
-  { label: 'Skills',       descriptor: 'What I work with', href: '#skills' },
-  { label: 'Projects',     descriptor: "What I've built",  href: '#projects' },
-  { label: 'Achievements', descriptor: "What I've earned", href: '#achievements' },
-  { label: 'Contact',      descriptor: 'Get in touch',     href: '#contact' },
+  { label: 'About',        descriptor: 'Who I am',           href: '#about' },
+  { label: 'Skills',       descriptor: 'What I work with',   href: '#skills' },
+  { label: 'Projects',     descriptor: "What I've built",    href: '#projects' },
+  { label: 'Research',     descriptor: "What I've explored", href: '#research' },
+  { label: 'Achievements', descriptor: "What I've earned",   href: '#achievements' },
+  { label: 'Contact',      descriptor: 'Get in touch',       href: '#contact' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -221,12 +222,13 @@ function buildTerrainData() {
   return { gridX, gridZ };
 }
 
-// 5 Fibonacci-sphere positions for node meshes (slightly outside particle sphere).
+// Fibonacci-sphere positions for node meshes (slightly outside particle sphere).
 function getNodePositions(radius) {
+  const n      = NODES.length;
   const pts    = [];
   const golden = (1 + Math.sqrt(5)) / 2;
-  for (let i = 0; i < 5; i++) {
-    const theta = Math.acos(1 - 2 * (i + 0.5) / 5);
+  for (let i = 0; i < n; i++) {
+    const theta = Math.acos(1 - 2 * (i + 0.5) / n);
     const phi   = 2 * Math.PI * i / golden;
     pts.push(new THREE.Vector3(
       radius * Math.sin(theta) * Math.cos(phi),
@@ -436,7 +438,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
 
     // ── 2D screen-space node picking ──────────────────────────────────────
     // Nodes are hit-tested against their projected screen coords (computed
-    // every frame alongside the label projection), ignoring depth — so all 5
+    // every frame alongside the label projection), ignoring depth — so all
     // stay clickable even on the far side of the sphere. No raycaster needed.
     const nodeScreen   = new Float32Array(NODES.length * 3); // sx, sy, worldZ
     const mouseClient  = { x: -9999, y: -9999 };
