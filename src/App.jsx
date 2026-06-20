@@ -144,6 +144,18 @@ const PROJECTS = [
     category: 'Hardware',
     inProgress: true,
   },
+  {
+    id: 8,
+    title: 'StudyBot',
+    summary: 'AI-powered study tool with workspace organization, PDF upload, quiz generation, and print-ready notes.',
+    description: 'AI-powered study tool with workspace organization, PDF upload, quiz generation, and print-ready notes. Built with React, Vite, Express, and the Claude API. V1 live — more features coming.',
+    stack: ['React', 'Vite', 'Express', 'Claude API'],
+    category: 'Web',
+    github: 'https://github.com/CodingMastermind123/StudyBot.git',
+    demo: 'https://study-bot-lovat.vercel.app',
+    showDemo: true,
+    inProgress: true,
+  },
 ];
 
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
@@ -1252,7 +1264,7 @@ function ProjectCard({ project, onExpand, index, pulsing }) {
       <p className="text-xs font-mono mt-3" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
         {project.stack.slice(0, 4).join(', ')}
       </p>
-      {isInProgress && (
+      {isInProgress && !project.github && (
         <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8, fontFamily: 'var(--font-mono)' }}>Repo coming soon</p>
       )}
     </div>
@@ -1405,7 +1417,7 @@ function ExpandedProjectCard({ project, onClose }) {
               ))}
             </div>
 
-            {project.inProgress ? (
+            {project.inProgress && !project.github ? (
               <p style={{ fontSize: 12, color: '#6b7280', fontFamily: 'var(--font-mono)' }}>Repo coming soon</p>
             ) : (
               <div className="flex gap-3 flex-wrap">
