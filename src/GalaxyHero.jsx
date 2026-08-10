@@ -303,9 +303,9 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
 
     // Color: radius-based gradient — bright lavender core → violet outer arms
     const aColorArr   = new Float32Array(N * 3);
-    const CORE_COL    = new THREE.Color(0xc4b5fd);
-    const MID_COL     = new THREE.Color(0xa855f7);
-    const OUTER_COL   = new THREE.Color(0x6d28d9);
+    const CORE_COL    = new THREE.Color(0xd8b4fe);
+    const MID_COL     = new THREE.Color(0xb347ff);
+    const OUTER_COL   = new THREE.Color(0x8b2fe0);
     const tmpCol      = new THREE.Color();
 
     for (let i = 0; i < N; i++) {
@@ -374,9 +374,9 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
           float dist = length(gl_PointCoord - vec2(0.5)) * 2.0;
           if (dist > 1.0) discard;
           float strength = exp(-dist * 8.0);
-          vec3 hotCore  = mix(vec3(0.97, 0.95, 1.0), vec3(1.0), vBright);
+          vec3 hotCore  = mix(vec3(0.88, 0.72, 1.0), vec3(0.96, 0.88, 1.0), vBright);
           vec3 midGlow  = vColor;
-          vec3 outerDim = vec3(0.427, 0.157, 0.851);
+          vec3 outerDim = vec3(0.55, 0.18, 1.0);
           vec3 col;
           if (dist < 0.15) {
             col = mix(hotCore, midGlow, dist / 0.15);
@@ -386,7 +386,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
             col = outerDim;
           }
           float alpha = strength * vAlpha * uGlobalAlpha;
-          gl_FragColor = vec4(col * (strength * 1.15), alpha);
+          gl_FragColor = vec4(col * (strength * 1.3), alpha);
         }
       `,
       transparent: true,
@@ -412,7 +412,7 @@ export const GalaxyScene = memo(function GalaxyScene({ isMobile, nameHoveredRef 
     const ambGeo = new THREE.BufferGeometry();
     ambGeo.setAttribute('position', new THREE.BufferAttribute(ambPos, 3));
     const ambMat = new THREE.PointsMaterial({
-      color: 0xc084fc, size: 0.04, map: circleTex,
+      color: 0xd291ff, size: 0.04, map: circleTex,
       transparent: true, opacity: 0.4,
       sizeAttenuation: true, depthWrite: false, alphaTest: 0.01,
     });
