@@ -843,11 +843,11 @@ function AboutSection() {
         {/* Step 6.1 — Centered bio + social links */}
         <div ref={bioRef} className="max-w-2xl mx-auto text-center space-y-6">
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-            Computer Engineering Honors student at Texas A&M (Class of 2029), building at the intersection of machine learning, embedded systems, and web development. I care about the full stack — from hardware design to deployed product — and about building things that actually matter.
+            I'm a Computer Engineering Honors student at Texas A&M (Class of 2029), and I like working across the whole stack: hardware, embedded systems, ML, web. The interesting problems usually live at the seams between those layers, and I'd rather build something that works end to end than get really good at one narrow piece of it.
           </p>
 
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-            Eagle Scout. Tennis player. Perpetual tinkerer.
+            Eagle Scout, tennis player, gamer, and gym rat.
           </p>
 
           {/* Social links */}
@@ -1158,10 +1158,11 @@ const SkillRadarChart = memo(function SkillRadarChart() {
   const axes = Array.from({ length: N }, (_, i) => pointAt(maxR, i));
 
   // Data polygon — animated by `prog`
-  const dataPath = toPath(RADAR_DATA.map((d, i) => pointAt(maxR * d.value * prog, i)));
+  const dataScale = 0.85;
+  const dataPath = toPath(RADAR_DATA.map((d, i) => pointAt(maxR * d.value * dataScale * prog, i)));
 
   // Dot positions for animated data points
-  const dots = RADAR_DATA.map((d, i) => pointAt(maxR * d.value * prog, i));
+  const dots = RADAR_DATA.map((d, i) => pointAt(maxR * d.value * dataScale * prog, i));
 
   // Label positions slightly outside maxR
   const labels = RADAR_DATA.map((d, i) => ({ ...pointAt(maxR + 22, i), axis: d.axis }));
