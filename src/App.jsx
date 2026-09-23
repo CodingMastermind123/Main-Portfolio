@@ -165,6 +165,33 @@ const PROJECTS = [
     stack: ['Arduino', 'C++', 'JavaScript'],
     category: 'Hardware',
     github: 'https://github.com/CodingMastermind123/Sensor-Dashboard',
+    demo: '#',
+  },
+  {
+    id: 10,
+    title: 'TURTLE SNOUT',
+    summary: 'Olfactory robot that combines scent sensing, computer vision, and machine learning to detect and track odor sources.',
+    description: 'A Texas A&M team project building a robot that "smells" its environment. An embedded system integrates gas and odor sensors, while computer vision and machine learning models fuse that sensor data to detect, localize, and track scent sources autonomously. Currently in active development.',
+    stack: ['Embedded Systems', 'Computer Vision', 'Machine Learning', 'Sensor Fusion'],
+    category: 'Hardware',
+    inProgress: true,
+  },
+  {
+    id: 11,
+    title: 'TAMU Lunabotics — GNC',
+    summary: 'Guidance, navigation, and control for an autonomous lunar rover competing in NASA\'s Lunabotics challenge.',
+    description: 'A TAMU SEDS lunar robotics project, in collaboration with Aggies Create, building a rover for NASA\'s Lunabotics challenge, where teams operate in a simulated lunar arena to excavate regolith and construct structures. The Guidance, Navigation, and Control subteam develops the rover\'s autonomy stack: localizing in the arena, planning paths around rocks and craters, and controlling the drivetrain to follow them. Currently in active development.',
+    stack: ['Autonomous Navigation', 'Path Planning', 'Localization', 'Controls'],
+    category: 'Hardware',
+    inProgress: true,
+  },
+  {
+    id: 12,
+    title: 'AirOne',
+    summary: 'Aggies Create student medical device combining a laryngoscope and suction into a single handheld tool for intubation.',
+    description: 'An Aggies Create student medical device project building a combined laryngoscope and suction device for emergency intubation. Blood, vomit, and secretions often block the view of the airway, forcing clinicians to juggle a separate suction catheter while holding the laryngoscope in place. AirOne integrates suction directly into the laryngoscope so the airway can be cleared without switching tools. The Electrical Engineering track develops the device\'s battery system, user interface, and pump/motor integration that power the built-in suction. Currently in active development.',
+    stack: ['Battery Systems', 'Motor Control', 'Embedded Systems', 'Medical Devices'],
+    category: 'Hardware',
     inProgress: true,
   },
 ];
@@ -172,6 +199,14 @@ const PROJECTS = [
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
 
 const RESEARCH = [
+  {
+    label: 'UNIVERSITY',
+    title: 'Multi-Robot Coordination Research — Lyu Lab',
+    date: 'Sep 2026 – Present',
+    description: 'Undergraduate research in Dr. Yiwei Lyu\'s lab (CSE, Texas A&M) on multi-robot coordination, applying machine learning to how teams of robots allocate tasks, plan paths, and cooperate under limited communication.',
+    tags: ['Multi-Robot Systems', 'Machine Learning'],
+    inProgress: true,
+  },
   {
     label: 'UNIVERSITY',
     title: 'Texas A&M Ultrasound Research Laboratory',
@@ -1592,7 +1627,9 @@ function ResearchCard({ research, index }) {
         background: 'rgba(255, 255, 255, 0.03)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
+        border: research.inProgress
+          ? '1.5px dashed rgba(167, 139, 250, 0.3)'
+          : hovered ? '1px solid rgba(167, 139, 250, 0.4)' : '1px solid rgba(167, 139, 250, 0.15)',
         boxShadow: hovered ? '0 0 20px rgba(167, 139, 250, 0.1)' : 'none',
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
         transition: 'transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease',
@@ -1600,9 +1637,16 @@ function ResearchCard({ research, index }) {
       className="hud-corners flex flex-col items-start text-left p-6 rounded-lg cursor-default"
     >
       <div className="flex items-center justify-between w-full mb-4">
-        <span className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
-          [{research.label}]
-        </span>
+        {research.inProgress ? (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest font-mono">
+            <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
+            <span style={{ color: '#22c55e' }}>In Progress</span>
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold uppercase tracking-widest font-mono" style={{ color: 'rgba(167, 139, 250, 0.5)' }}>
+            [{research.label}]
+          </span>
+        )}
         <span className="text-[10px] font-mono" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
           {research.date}
         </span>
