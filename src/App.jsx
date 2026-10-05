@@ -808,7 +808,7 @@ function HeroSection({ isMobile, nameHoveredRef }) {
               marginTop: 'clamp(1.5rem, 3.5vh, 2.5rem)',
             }}
           >
-            Building at the intersection of ML &amp; Hardware
+            Building robots and the software that runs them.
           </p>
 
           {/* Plain text links with hover underline + arrow nudge */}
