@@ -1420,11 +1420,15 @@ function ExpandedProjectCard({ project, onClose }) {
         >
           {/* Floater+Glow card — float and breathe animations live here */}
           <div
-            className={`bg-white dark:bg-gray-900 rounded-2xl border p-8 ${isOpen ? 'card-float-anim card-glow-anim' : ''}`}
+            className={`hud-corners rounded-lg p-8 ${isOpen ? 'card-float-anim card-glow-anim' : ''}`}
             style={{
+              position: 'relative',
               maxHeight: '85vh',
               overflowY: 'auto',
-              borderColor: 'rgba(168, 85, 247, 0.4)',
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(167, 139, 250, 0.4)',
               // During charge-up: freeze animations, jump to max glow
               ...(isCharging ? {
                 animation: 'none',
@@ -1435,18 +1439,18 @@ function ExpandedProjectCard({ project, onClose }) {
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               {project.inProgress ? (
-                <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 font-mono">
+                <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 font-mono">
                   <span className="pulse-dot" style={{ width: 6, height: 6 }} aria-hidden="true" />
                   <span style={{ color: '#22c55e' }}>In Progress</span>
                 </span>
               ) : (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-mono">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 text-violet-300 font-mono">
                   {project.category}
                 </span>
               )}
               <button
                 onClick={() => closeRef.current()}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/10 transition-colors"
                 aria-label="Close"
               >
                 <FiX size={18} />
@@ -1468,7 +1472,7 @@ function ExpandedProjectCard({ project, onClose }) {
               {project.stack.map((tech) => (
                 <span
                   key={tech}
-                  className="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono"
+                  className="text-sm px-3 py-1 rounded-full bg-white/5 text-gray-300 font-mono"
                 >
                   {tech}
                 </span>
