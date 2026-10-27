@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
-  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus, SiC, SiReact, SiArduino,
+  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus, SiC, SiReact, SiArduino, SiPytorch, SiNumpy, SiNodedotjs,
 } from 'react-icons/si';
 import { GiFleurDeLys } from 'react-icons/gi';
 import { MdVolunteerActivism } from 'react-icons/md';
@@ -72,6 +72,9 @@ const SKILL_GROUPS = [
     skills: [
       { name: 'React',      icon: SiReact,      color: '#61DAFB' },
       { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
+      { name: 'PyTorch',    icon: SiPytorch,    color: '#EE4C2C' },
+      { name: 'NumPy',      icon: SiNumpy,      color: '#4DABCF' },
+      { name: 'Node.js',    icon: SiNodedotjs,  color: '#5FA04E' },
     ],
   },
   {
@@ -1004,8 +1007,8 @@ function SkillCategory({ category, skills, baseDelay }) {
         </h3>
         <div className="flex-1 h-px" style={{ background: 'rgba(167, 139, 250, 0.2)' }} />
       </div>
-      {/* 2 across on phones (a lone last tile spans both), 4 across from sm up so every group fits one row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+      {/* 2 across on phones (a lone last tile spans both), 5 across from sm up so every group fits one row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
         {skills.map((skill, i) => (
           <SkillCard key={skill.name} skill={skill} delay={baseDelay + i * 50} />
         ))}
