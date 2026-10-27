@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
-  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus,
+  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus, SiC, SiReact,
 } from 'react-icons/si';
 import { GiFleurDeLys } from 'react-icons/gi';
 import { MdVolunteerActivism } from 'react-icons/md';
@@ -47,24 +47,44 @@ const CURRENTLY_LEARNING = [
   { name: 'Verilog', desc: 'Getting started with HDL',        stage: 'Fundamentals', width: 16 },
 ];
 
-const SKILLS = {
-  Languages: [
-    { name: 'Python',     icon: SiPython,     color: '#3776AB' },
-    { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
-    { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
-    { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
-    { name: 'Java',       icon: FiCoffee,     color: '#007396' },
-    { name: 'C++',        icon: SiCplusplus,  color: '#00599C' },
-  ],
-  Frameworks: [
-    { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
-  ],
-  Tools: [
-    { name: 'Git',        icon: SiGit,  color: '#F05032' },
-    { name: 'Linux',      icon: SiLinux, color: '#FCC624' },
-    { name: 'SolidWorks', icon: FiBox,  color: '#FF0000' },
-  ],
-};
+// Skill tiles. Order here is the order on the page.
+// Add or reorder a skill with one edit. Optional `project` (added later) shows as subtext.
+const SKILL_GROUPS = [
+  {
+    label: 'Languages',
+    skills: [
+      { name: 'Python', icon: SiPython,    color: '#3776AB' },
+      { name: 'C++',    icon: SiCplusplus, color: '#00599C' },
+      { name: 'C',      icon: SiC,         color: '#A8B9CC' },
+      { name: 'Java',   icon: FiCoffee,    color: '#007396' },
+    ],
+  },
+  {
+    label: 'Web',
+    skills: [
+      { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
+      { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
+      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
+    ],
+  },
+  {
+    label: 'Frameworks',
+    skills: [
+      { name: 'React',      icon: SiReact,      color: '#61DAFB' },
+      { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
+    ],
+  },
+  {
+    label: 'Tools',
+    skills: [
+      { name: 'Git',        icon: SiGit,   color: '#F05032' },
+      { name: 'Linux',      icon: SiLinux, color: '#FCC624' },
+      { name: 'SolidWorks', icon: FiBox,   color: '#FF0000' },
+      // TODO (not enabled, confirm before adding): Arduino, Verilog, PID Control,
+      // OpenCV, CAD beyond SolidWorks, hardware debugging tools (scope, logic analyzer)
+    ],
+  },
+];
 
 // Radar chart config. Edit axes, values, and ring names here only.
 // value is 0 to 1 and is plotted as-is, so it lines up with the rings below.
@@ -984,7 +1004,8 @@ function SkillCategory({ category, skills, baseDelay }) {
         </h3>
         <div className="flex-1 h-px" style={{ background: 'rgba(167, 139, 250, 0.2)' }} />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* 2 across on phones (a lone last tile spans both), 4 across from sm up so every group fits one row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
         {skills.map((skill, i) => (
           <SkillCard key={skill.name} skill={skill} delay={baseDelay + i * 50} />
         ))}
@@ -1105,10 +1126,10 @@ function SkillsSection() {
 
           {/* Skill categories — span 2 columns */}
           <div className="lg:col-span-2 space-y-8">
-            {Object.entries(SKILLS).map(([category, skills], ci) => (
+            {SKILL_GROUPS.map(({ label, skills }, ci) => (
               <SkillCategory
-                key={category}
-                category={category}
+                key={label}
+                category={label}
                 skills={skills}
                 baseDelay={ci * 100}
               />
