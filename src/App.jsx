@@ -214,6 +214,15 @@ const PROJECTS = [
     category: 'Hardware',
     inProgress: true,
   },
+  {
+    id: 13,
+    title: 'ENGR 289 IMPACT - Robotics Project',
+    summary: 'Team robot built to follow a line on a branching track and pick up plastic Easter eggs from three zones at different heights.',
+    description: 'A team project for ENGR 289 (IMPACT Robotics Projects). The robot runs on an ESP32 and is built to follow a line on a branching track using a bar of 5 IR sensors plus an HC-SR04 ultrasonic sensor, then pick up plastic Easter eggs from three collection zones at different heights. Two TT gear motors drive the back with passive front wheels, and a small servo-driven scoop on an arm rotates over a basket on the chassis. Our team compared mechanisms with a decision matrix and redesigned when the first choice turned out too complicated to build. I designed the chassis in SolidWorks: sizing everything to fit inside the 6x6 in limit, wheel clearance, motor pockets, the basket and servo-driven door, and sensor bar spacing. The arm and other subsystems are my teammates\' parts. Currently in active development.',
+    stack: ['ESP32', 'C++', 'SolidWorks', 'Servo Control', 'IR Sensors'],
+    category: 'Hardware',
+    inProgress: true,
+  },
 ];
 
 const PROJECT_CATEGORIES = ['All', 'ML', 'Hardware', 'Web', 'Other'];
