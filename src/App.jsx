@@ -66,13 +66,22 @@ const SKILLS = {
   ],
 };
 
-const RADAR_DATA = [
-  { axis: 'ML',       value: 0.62 },
-  { axis: 'Web',      value: 0.65 },
-  { axis: 'Hardware', value: 0.70 },
-  { axis: 'Embedded', value: 0.72 },
-  { axis: 'Systems',  value: 0.48 },
-];
+// Radar chart config. Edit axes, values, and ring names here only.
+// value is 0 to 1 and is plotted as-is, so it lines up with the rings below.
+const RADAR_CONFIG = {
+  rings: [
+    { at: 0.33, label: 'Learning' },
+    { at: 0.66, label: 'Comfortable' },
+    { at: 1,    label: 'Strong' },
+  ],
+  axes: [
+    { axis: 'ML',             value: 0.53 },
+    { axis: 'Web',            value: 0.55 },
+    { axis: 'Embedded',       value: 0.61 },
+    { axis: 'Digital Design', value: 0.35 }, // TODO confirm
+    { axis: 'Controls',       value: 0.45 }, // TODO confirm
+  ],
+};
 
 const PROJECTS = [
   {
@@ -1163,7 +1172,7 @@ const SkillRadarChart = memo(function SkillRadarChart() {
   }, []);
 
   const cx = 150, cy = 150, maxR = 100;
-  const N  = RADAR_DATA.length; // 5
+  const N  = RADAR_CONFIG.axes.length;
 
   const angleOf  = (i) => (i * (2 * Math.PI) / N) - Math.PI / 2;
   const pointAt  = (r, i) => ({
@@ -1173,30 +1182,31 @@ const SkillRadarChart = memo(function SkillRadarChart() {
   const toPath   = (pts) =>
     pts.map((p, j) => `${j === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') + ' Z';
 
-  // 3 concentric grid pentagons
-  const gridRings = [0.33, 0.66, 1].map(scale =>
-    toPath(Array.from({ length: N }, (_, i) => pointAt(maxR * scale, i)))
+  // Concentric grid rings, one per level in RADAR_CONFIG
+  const gridRings = RADAR_CONFIG.rings.map(({ at }) =>
+    toPath(Array.from({ length: N }, (_, i) => pointAt(maxR * at, i)))
   );
 
   // Axis endpoints (full radius)
   const axes = Array.from({ length: N }, (_, i) => pointAt(maxR, i));
 
   // Data polygon — animated by `prog`
-  const dataScale = 0.85;
-  const dataPath = toPath(RADAR_DATA.map((d, i) => pointAt(maxR * d.value * dataScale * prog, i)));
+  const dataPath = toPath(RADAR_CONFIG.axes.map((d, i) => pointAt(maxR * d.value * prog, i)));
 
   // Dot positions for animated data points
-  const dots = RADAR_DATA.map((d, i) => pointAt(maxR * d.value * dataScale * prog, i));
+  const dots = RADAR_CONFIG.axes.map((d, i) => pointAt(maxR * d.value * prog, i));
 
   // Label positions slightly outside maxR
-  const labels = RADAR_DATA.map((d, i) => ({ ...pointAt(maxR + 22, i), axis: d.axis }));
+  const labels = RADAR_CONFIG.axes.map((d, i) => ({ ...pointAt(maxR + 22, i), axis: d.axis }));
 
   return (
+    <>
     <svg
       ref={svgRef}
       viewBox="0 0 300 300"
       className="w-full max-w-[280px] mx-auto"
       aria-label="Skill proficiency radar chart"
+      overflow="visible"
     >
       {/* Grid rings */}
       {gridRings.map((d, i) => (
@@ -1252,6 +1262,12 @@ const SkillRadarChart = memo(function SkillRadarChart() {
         </text>
       ))}
     </svg>
+
+    {/* Scale legend */}
+    <p className="text-[10px] font-mono text-gray-500 text-center -mt-2">
+      centre to edge: {RADAR_CONFIG.rings.map((r) => r.label.toLowerCase()).join(', ')}
+    </p>
+    </>
   );
 });
 // ════════════════ PHASE 8 — PROJECTS ════════════════
