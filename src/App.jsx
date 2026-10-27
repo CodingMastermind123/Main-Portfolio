@@ -1,16 +1,16 @@
 // ════════════════ 3.1 IMPORTS ════════════════
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GalaxyScene } from './GalaxyHero.jsx';
 import { StarfieldHero } from './StarfieldHero.jsx';
 import {
   FiGithub, FiLinkedin, FiMail, FiExternalLink,
   FiMenu, FiX, FiSearch,
   FiArrowRight, FiAward, FiCode, FiLayers, FiZap, FiUser,
-  FiActivity, FiBox, FiCoffee,
+  FiActivity, FiBox, FiCoffee, FiTool, FiPenTool,
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
-  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus, SiC, SiReact,
+  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus, SiC, SiReact, SiArduino,
 } from 'react-icons/si';
 import { GiFleurDeLys } from 'react-icons/gi';
 import { MdVolunteerActivism } from 'react-icons/md';
@@ -48,14 +48,13 @@ const CURRENTLY_LEARNING = [
 ];
 
 // Skill tiles. Order here is the order on the page.
-// Add or reorder a skill with one edit. Optional `project` shows as subtext and
-// must match a card in PROJECTS. Left off on purpose: C, Java, Git, Linux, SolidWorks.
+// Add or reorder a skill with one edit.
 const SKILL_GROUPS = [
   {
     label: 'Languages',
     skills: [
-      { name: 'Python', icon: SiPython,    color: '#3776AB', project: 'Biomedical ML' },
-      { name: 'C++',    icon: SiCplusplus, color: '#00599C', project: '2-Axis Gimbal' },
+      { name: 'Python', icon: SiPython,    color: '#3776AB' },
+      { name: 'C++',    icon: SiCplusplus, color: '#00599C' },
       { name: 'C',      icon: SiC,         color: '#A8B9CC' },
       { name: 'Java',   icon: FiCoffee,    color: '#007396' },
     ],
@@ -63,46 +62,37 @@ const SKILL_GROUPS = [
   {
     label: 'Web',
     skills: [
-      { name: 'HTML',       icon: SiHtml5,      color: '#E34F26', project: 'GoodBeats' },
-      { name: 'CSS',        icon: SiCss,        color: '#1572B6', project: 'GoodBeats' },
-      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E', project: 'Sensor Dashboard' },
+      { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
+      { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
+      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
     ],
   },
   {
     label: 'Frameworks',
     skills: [
-      { name: 'React',      icon: SiReact,      color: '#61DAFB', project: 'StudyBot' },
-      { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00', project: 'GoodBeats' },
+      { name: 'React',      icon: SiReact,      color: '#61DAFB' },
+      { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
+    ],
+  },
+  {
+    label: 'Hardware',
+    skills: [
+      { name: 'Arduino',    icon: SiArduino,  color: '#00878F' },
+      { name: 'Prototyping', icon: FiTool,    color: '#A78BFA' },
+      { name: 'CAD',        icon: FiPenTool,  color: '#38BDF8' },
+      { name: 'SolidWorks', icon: FiBox,      color: '#FF0000' },
+      // TODO (not enabled, confirm before adding): Verilog, PID Control, OpenCV,
+      // hardware debugging tools (scope, logic analyzer)
     ],
   },
   {
     label: 'Tools',
     skills: [
-      { name: 'Git',        icon: SiGit,   color: '#F05032' },
-      { name: 'Linux',      icon: SiLinux, color: '#FCC624' },
-      { name: 'SolidWorks', icon: FiBox,   color: '#FF0000' },
-      // TODO (not enabled, confirm before adding): Arduino, Verilog, PID Control,
-      // OpenCV, CAD beyond SolidWorks, hardware debugging tools (scope, logic analyzer)
+      { name: 'Git',   icon: SiGit,   color: '#F05032' },
+      { name: 'Linux', icon: SiLinux, color: '#FCC624' },
     ],
   },
 ];
-
-// Radar chart config. Edit axes, values, and ring names here only.
-// value is 0 to 1 and is plotted as-is, so it lines up with the rings below.
-const RADAR_CONFIG = {
-  rings: [
-    { at: 0.33, label: 'Learning' },
-    { at: 0.66, label: 'Comfortable' },
-    { at: 1,    label: 'Strong' },
-  ],
-  axes: [
-    { axis: 'ML',             value: 0.53 },
-    { axis: 'Web',            value: 0.55 },
-    { axis: 'Embedded',       value: 0.61 },
-    { axis: 'Digital Design', value: 0.35 }, // TODO confirm
-    { axis: 'Controls',       value: 0.45 }, // TODO confirm
-  ],
-};
 
 const PROJECTS = [
   {
@@ -983,18 +973,12 @@ function SkillCard({ skill, delay }) {
         transition: 'box-shadow 200ms ease, transform 200ms ease',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
-      title={skill.project ? `Used in ${skill.project}` : undefined}
       className="skill-chip hud-corners flex flex-col items-center gap-1 py-2 px-2 rounded-lg cursor-default"
     >
       <Icon size={20} style={{ color: skill.color }} />
       <span className="text-[10px] font-medium text-gray-400 text-center leading-tight font-mono">
         {skill.name}
       </span>
-      {skill.project && (
-        <span className="text-[9px] text-gray-500 text-center leading-tight font-mono">
-          {skill.project}
-        </span>
-      )}
     </div>
   );
 }
@@ -1021,7 +1005,7 @@ function SkillCategory({ category, skills, baseDelay }) {
   );
 }
 
-// Step 7.1 — Skills section: categories grid + radar chart
+// Currently Learning card
 function LearningCard({ item }) {
   const [hovered, setHovered] = useState(false);
   const { name, note, stage } = item;
@@ -1078,7 +1062,6 @@ function CurrentlyLearning() {
 
 function SkillsSection() {
   const headingRef = useScrollReveal(0);
-  const radarRef   = useScrollReveal(150);
 
   return (
     <section id="skills" className="relative overflow-hidden py-24" style={{ background: 'rgba(8, 8, 20, 0.75)' }}>
@@ -1096,176 +1079,25 @@ function SkillsSection() {
           <div className="mt-3 mx-auto h-1 w-16 rounded-full bg-indigo-500" />
         </div>
 
-        {/* Two-column: skill cards left, radar chart right */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-
-          {/* Skill categories — span 2 columns */}
-          <div className="lg:col-span-2 space-y-8">
-            {SKILL_GROUPS.map(({ label, skills }, ci) => (
-              <SkillCategory
-                key={label}
-                category={label}
-                skills={skills}
-                baseDelay={ci * 100}
-              />
-            ))}
-          </div>
-
-          {/* Radar chart — proficiency overview */}
-          <div ref={radarRef} className="flex flex-col items-center gap-4 lg:self-center">
-            <h3
-              className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              Proficiency Overview
-            </h3>
-            <SkillRadarChart />
-          </div>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {SKILL_GROUPS.map(({ label, skills }, ci) => (
+            <SkillCategory
+              key={label}
+              category={label}
+              skills={skills}
+              baseDelay={ci * 100}
+            />
+          ))}
         </div>
 
         {/* Currently Learning subsection */}
-        <CurrentlyLearning />
+        <div className="max-w-4xl mx-auto"><CurrentlyLearning /></div>
 
       </div>
     </section>
   );
 }
 
-// Step 7.2 — SVG radar chart, animates from center on scroll
-const SkillRadarChart = memo(function SkillRadarChart() {
-  const svgRef      = useRef(null);
-  const [prog, setProg] = useState(0);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated.current) {
-          hasAnimated.current = true;
-          const start    = performance.now();
-          const duration = 1000;
-
-          const tick = (now) => {
-            const elapsed = now - start;
-            const p       = Math.min(elapsed / duration, 1);
-            const eased   = 1 - Math.pow(1 - p, 3);
-            setProg(eased);
-            if (p < 1) requestAnimationFrame(tick);
-          };
-
-          requestAnimationFrame(tick);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const cx = 150, cy = 150, maxR = 100;
-  const N  = RADAR_CONFIG.axes.length;
-
-  const angleOf  = (i) => (i * (2 * Math.PI) / N) - Math.PI / 2;
-  const pointAt  = (r, i) => ({
-    x: cx + r * Math.cos(angleOf(i)),
-    y: cy + r * Math.sin(angleOf(i)),
-  });
-  const toPath   = (pts) =>
-    pts.map((p, j) => `${j === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ') + ' Z';
-
-  // Concentric grid rings, one per level in RADAR_CONFIG
-  const gridRings = RADAR_CONFIG.rings.map(({ at }) =>
-    toPath(Array.from({ length: N }, (_, i) => pointAt(maxR * at, i)))
-  );
-
-  // Axis endpoints (full radius)
-  const axes = Array.from({ length: N }, (_, i) => pointAt(maxR, i));
-
-  // Data polygon — animated by `prog`
-  const dataPath = toPath(RADAR_CONFIG.axes.map((d, i) => pointAt(maxR * d.value * prog, i)));
-
-  // Dot positions for animated data points
-  const dots = RADAR_CONFIG.axes.map((d, i) => pointAt(maxR * d.value * prog, i));
-
-  // Label positions slightly outside maxR
-  const labels = RADAR_CONFIG.axes.map((d, i) => ({ ...pointAt(maxR + 22, i), axis: d.axis }));
-
-  return (
-    <>
-    <svg
-      ref={svgRef}
-      viewBox="0 0 300 300"
-      className="w-full max-w-[280px] lg:max-w-[340px] mx-auto"
-      aria-label="Skill proficiency radar chart"
-      overflow="visible"
-    >
-      {/* Grid rings */}
-      {gridRings.map((d, i) => (
-        <path
-          key={i}
-          d={d}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity="0.15"
-          strokeWidth="1"
-        />
-      ))}
-
-      {/* Axis lines */}
-      {axes.map((pt, i) => (
-        <line
-          key={i}
-          x1={cx} y1={cy}
-          x2={pt.x} y2={pt.y}
-          stroke="currentColor"
-          strokeOpacity="0.15"
-          strokeWidth="1"
-        />
-      ))}
-
-      {/* Data polygon */}
-      <path
-        d={dataPath}
-        fill="rgba(99,102,241,0.22)"
-        stroke="rgb(99,102,241)"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-
-      {/* Data dots */}
-      {dots.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="4" fill="rgb(99,102,241)" />
-      ))}
-
-      {/* Axis labels */}
-      {labels.map(({ x, y, axis }, i) => (
-        <text
-          key={i}
-          x={x}
-          y={y}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="11"
-          fontWeight="500"
-          className="fill-gray-600 dark:fill-gray-400"
-        >
-          {axis}
-        </text>
-      ))}
-    </svg>
-
-    {/* Scale legend */}
-    <p className="text-[10px] font-mono text-gray-500 text-center -mt-2">
-      centre to edge: {RADAR_CONFIG.rings.map((r) => r.label.toLowerCase()).join(', ')}
-    </p>
-    </>
-  );
-});
 // ════════════════ PHASE 8 — PROJECTS ════════════════
 
 const CATEGORY_ABBREV = { ML: 'ML', Hardware: 'HW', Web: 'WEB', Other: 'OTHER' };
