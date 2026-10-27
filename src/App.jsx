@@ -200,7 +200,7 @@ const PROJECTS = [
     id: 11,
     title: 'TAMU Lunabotics — GNC',
     summary: 'Guidance, navigation, and control for an autonomous lunar rover competing in NASA\'s Lunabotics challenge.',
-    description: 'A TAMU SEDS lunar robotics project, in collaboration with Aggies Create, building a rover for NASA\'s Lunabotics challenge, where teams operate in a simulated lunar arena to excavate regolith and construct structures. The Guidance, Navigation, and Control subteam develops the rover\'s autonomy stack: localizing in the arena, planning paths around rocks and craters, and controlling the drivetrain to follow them. Currently in active development.',
+    description: 'A TAMU SEDS lunar robotics project building a rover for NASA\'s Lunabotics challenge, where teams operate in a simulated lunar arena to excavate regolith and construct structures. The Guidance, Navigation, and Control subteam develops the rover\'s autonomy stack: localizing in the arena, planning paths around rocks and craters, and controlling the drivetrain to follow them. Currently in active development.',
     stack: ['Autonomous Navigation', 'Path Planning', 'Localization', 'Controls'],
     category: 'Hardware',
     inProgress: true,
