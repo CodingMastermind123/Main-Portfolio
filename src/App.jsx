@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
-  SiGit, SiLinux, SiHtml5, SiCss,
+  SiGit, SiLinux, SiHtml5, SiCss, SiCplusplus,
 } from 'react-icons/si';
 import { GiFleurDeLys } from 'react-icons/gi';
 import { MdVolunteerActivism } from 'react-icons/md';
@@ -42,7 +42,6 @@ const STATS = [
 ];
 
 const CURRENTLY_LEARNING = [
-  { name: 'C++',     desc: 'Learning this summer',            stage: 'Fundamentals', width: 30 },
   { name: 'Arduino', desc: 'Hands-on with embedded projects', stage: 'Fundamentals', width: 30 },
   { name: 'React',   desc: 'Used in projects',                stage: 'Building',     width: 50 },
   { name: 'Verilog', desc: 'Getting started with HDL',        stage: 'Fundamentals', width: 16 },
@@ -55,6 +54,7 @@ const SKILLS = {
     { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
     { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
     { name: 'Java',       icon: FiCoffee,     color: '#007396' },
+    { name: 'C++',        icon: SiCplusplus,  color: '#00599C' },
   ],
   Frameworks: [
     { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
@@ -67,11 +67,11 @@ const SKILLS = {
 };
 
 const RADAR_DATA = [
-  { axis: 'ML',       value: 0.75 },
+  { axis: 'ML',       value: 0.62 },
   { axis: 'Web',      value: 0.65 },
   { axis: 'Hardware', value: 0.70 },
   { axis: 'Embedded', value: 0.72 },
-  { axis: 'Systems',  value: 0.60 },
+  { axis: 'Systems',  value: 0.48 },
 ];
 
 const PROJECTS = [
