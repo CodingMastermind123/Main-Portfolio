@@ -6,7 +6,7 @@ import {
   FiGithub, FiLinkedin, FiMail, FiExternalLink,
   FiMenu, FiX, FiSearch,
   FiArrowRight, FiAward, FiCode, FiLayers, FiZap, FiUser,
-  FiActivity, FiBox, FiCoffee, FiTool, FiPenTool,
+  FiActivity, FiBox, FiCoffee, FiTool, FiPenTool, FiCpu,
 } from 'react-icons/fi';
 import {
   SiPython, SiJavascript, SiTensorflow,
@@ -81,6 +81,7 @@ const SKILL_GROUPS = [
     label: 'Hardware',
     skills: [
       { name: 'Arduino',    icon: SiArduino,  color: '#00878F' },
+      { name: 'Embedded C/C++', icon: FiCpu,  color: '#00599C' },
       { name: 'Prototyping', icon: FiTool,    color: '#A78BFA' },
       { name: 'CAD',        icon: FiPenTool,  color: '#38BDF8' },
       { name: 'SolidWorks', icon: FiBox,      color: '#FF0000' },
