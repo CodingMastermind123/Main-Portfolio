@@ -1112,7 +1112,7 @@ function SkillsSection() {
           </div>
 
           {/* Radar chart — proficiency overview */}
-          <div ref={radarRef} className="flex flex-col items-center gap-4">
+          <div ref={radarRef} className="flex flex-col items-center gap-4 lg:self-center">
             <h3
               className="text-base font-semibold text-gray-700 dark:text-gray-300 text-center"
               style={{ fontFamily: 'var(--font-display)' }}
@@ -1200,7 +1200,7 @@ const SkillRadarChart = memo(function SkillRadarChart() {
     <svg
       ref={svgRef}
       viewBox="0 0 300 300"
-      className="w-full max-w-[280px] mx-auto"
+      className="w-full max-w-[280px] lg:max-w-[340px] mx-auto"
       aria-label="Skill proficiency radar chart"
       overflow="visible"
     >
