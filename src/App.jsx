@@ -42,9 +42,9 @@ const STATS = [
 ];
 
 const CURRENTLY_LEARNING = [
-  { name: 'Arduino', desc: 'Hands-on with embedded projects', stage: 'Fundamentals', width: 30 },
-  { name: 'React',   desc: 'Used in projects',                stage: 'Building',     width: 50 },
-  { name: 'Verilog', desc: 'Getting started with HDL',        stage: 'Fundamentals', width: 16 },
+  { name: 'Arduino', note: 'Built a sensor dashboard with live PID tuning, and now building a 2-axis gimbal.', stage: 'Building' },
+  { name: 'React',   note: 'Built StudyBot and this site with it.',                                            stage: 'Building' },
+  { name: 'Verilog', note: 'Used SystemVerilog on a team hardware graphics engine, still getting the basics down.', stage: 'Fundamentals' },
 ];
 
 // Skill tiles. Order here is the order on the page.
@@ -1022,9 +1022,9 @@ function SkillCategory({ category, skills, baseDelay }) {
 }
 
 // Step 7.1 — Skills section: categories grid + radar chart
-function LearningCard({ item, started }) {
+function LearningCard({ item }) {
   const [hovered, setHovered] = useState(false);
-  const { name, desc, stage, width } = item;
+  const { name, note, stage } = item;
 
   return (
     <div
@@ -1045,48 +1045,16 @@ function LearningCard({ item, started }) {
         <span className="text-sm font-medium text-gray-900 dark:text-white font-mono">{name}</span>
         <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">{stage}</span>
       </div>
-      <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{desc}</p>
-      <div
-        className="h-1 w-full rounded-full overflow-hidden"
-        style={{ background: '#1e1e2e' }}
-      >
-        <div
-          style={{
-            width: started ? `${width}%` : '0%',
-            height: '100%',
-            borderRadius: '999px',
-            background: 'linear-gradient(to right, #7c3aed, #a855f7)',
-            transition: 'width 800ms ease-out',
-          }}
-        />
-      </div>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{note}</p>
     </div>
   );
 }
 
 function CurrentlyLearning() {
-  const containerRef = useRef(null);
-  const [started, setStarted] = useState(false);
   const labelRef = useScrollReveal(0);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStarted(true);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <div ref={containerRef} className="mt-12">
+    <div className="mt-12">
       {/* Divider */}
       <div className="mb-8" style={{ borderTop: '1px solid rgba(167, 139, 250, 0.15)' }} />
 
@@ -1098,10 +1066,10 @@ function CurrentlyLearning() {
         </h3>
       </div>
 
-      {/* Progress bar items */}
+      {/* Learning items */}
       <div className="flex flex-col gap-3">
         {CURRENTLY_LEARNING.map((item) => (
-          <LearningCard key={item.name} item={item} started={started} />
+          <LearningCard key={item.name} item={item} />
         ))}
       </div>
     </div>
