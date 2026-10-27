@@ -48,13 +48,14 @@ const CURRENTLY_LEARNING = [
 ];
 
 // Skill tiles. Order here is the order on the page.
-// Add or reorder a skill with one edit. Optional `project` (added later) shows as subtext.
+// Add or reorder a skill with one edit. Optional `project` shows as subtext and
+// must match a card in PROJECTS. Left off on purpose: C, Java, Git, Linux, SolidWorks.
 const SKILL_GROUPS = [
   {
     label: 'Languages',
     skills: [
-      { name: 'Python', icon: SiPython,    color: '#3776AB' },
-      { name: 'C++',    icon: SiCplusplus, color: '#00599C' },
+      { name: 'Python', icon: SiPython,    color: '#3776AB', project: 'Biomedical ML' },
+      { name: 'C++',    icon: SiCplusplus, color: '#00599C', project: '2-Axis Gimbal' },
       { name: 'C',      icon: SiC,         color: '#A8B9CC' },
       { name: 'Java',   icon: FiCoffee,    color: '#007396' },
     ],
@@ -62,16 +63,16 @@ const SKILL_GROUPS = [
   {
     label: 'Web',
     skills: [
-      { name: 'HTML',       icon: SiHtml5,      color: '#E34F26' },
-      { name: 'CSS',        icon: SiCss,        color: '#1572B6' },
-      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E' },
+      { name: 'HTML',       icon: SiHtml5,      color: '#E34F26', project: 'GoodBeats' },
+      { name: 'CSS',        icon: SiCss,        color: '#1572B6', project: 'GoodBeats' },
+      { name: 'JavaScript', icon: SiJavascript, color: '#F7DF1E', project: 'Sensor Dashboard' },
     ],
   },
   {
     label: 'Frameworks',
     skills: [
-      { name: 'React',      icon: SiReact,      color: '#61DAFB' },
-      { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00' },
+      { name: 'React',      icon: SiReact,      color: '#61DAFB', project: 'StudyBot' },
+      { name: 'TensorFlow', icon: SiTensorflow, color: '#FF6F00', project: 'GoodBeats' },
     ],
   },
   {
@@ -982,12 +983,18 @@ function SkillCard({ skill, delay }) {
         transition: 'box-shadow 200ms ease, transform 200ms ease',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
+      title={skill.project ? `Used in ${skill.project}` : undefined}
       className="skill-chip hud-corners flex flex-col items-center gap-1 py-2 px-2 rounded-lg cursor-default"
     >
       <Icon size={20} style={{ color: skill.color }} />
       <span className="text-[10px] font-medium text-gray-400 text-center leading-tight font-mono">
         {skill.name}
       </span>
+      {skill.project && (
+        <span className="text-[9px] text-gray-500 text-center leading-tight font-mono">
+          {skill.project}
+        </span>
+      )}
     </div>
   );
 }
