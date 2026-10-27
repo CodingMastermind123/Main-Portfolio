@@ -44,7 +44,7 @@ const STATS = [
 const CURRENTLY_LEARNING = [
   { name: 'Arduino', note: 'Built a sensor dashboard with live PID tuning, and now building a 2-axis gimbal.', stage: 'Building' },
   { name: 'React',   note: 'Built StudyBot and this site with it.',                                            stage: 'Building' },
-  { name: 'Verilog', note: 'Used SystemVerilog on a team hardware graphics engine, still getting the basics down.', stage: 'Fundamentals' },
+  { name: 'Verilog', note: 'Learning it as part of my digital logic class.', stage: 'Fundamentals' },
 ];
 
 // Skill tiles. Order here is the order on the page.
